@@ -14,6 +14,7 @@ deployment:
     - /bin/mkdir -p /home/hatchwan/servio.hatchers.ai/storage/logs
     - /bin/mkdir -p /home/hatchwan/servio.hatchers.ai/bootstrap/cache
     - /bin/chmod -R 775 /home/hatchwan/servio.hatchers.ai/storage /home/hatchwan/servio.hatchers.ai/bootstrap/cache
+    - /bin/sh -lc 'cd /home/hatchwan/servio.hatchers.ai && if [ -x /opt/cpanel/composer/bin/composer ]; then /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader; elif [ -x /usr/local/bin/composer ]; then /usr/local/bin/composer install --no-dev --optimize-autoloader; else composer install --no-dev --optimize-autoloader; fi'
     - /usr/local/bin/php /home/hatchwan/servio.hatchers.ai/artisan config:clear
     - /usr/local/bin/php /home/hatchwan/servio.hatchers.ai/artisan cache:clear
     - /usr/local/bin/php /home/hatchwan/servio.hatchers.ai/artisan route:clear
