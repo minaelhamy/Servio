@@ -1,0 +1,68 @@
+{
+  "fields": [
+    {
+      "icon": "<i class='fa-regular fa-phone'></i>",
+      "title": "Phone"
+    },
+    {
+      "icon": "<i class='fa-regular fa-envelope'></i>",
+      "title": "Email"
+    },
+    {
+      "icon": "<i class='fa-regular fa-location-dot'></i>",
+      "title": "Address"
+    },
+    {
+      "icon": "<i class='fa-brands fa-facebook-f'></i>",
+      "title": "Facebook"
+    },
+    {
+      "icon": "<i class='fa-brands fa-instagram'></i>",
+      "title": "Instagram"
+    },
+    {
+      "icon": "<i class='fa-brands fa-linkedin'></i>",
+      "title": "Linkdin"
+    },
+    {
+      "icon": "<i class='fa-brands fa-twitter'></i>",
+      "title": "Twitter"
+    },
+    {
+      "icon": "<i class='fa-brands fa-youtube'></i>",
+      "title": "Youtube"
+    },
+    {
+      "icon": "<i class='fa-brands fa-behance'></i>",
+      "title": "Behance"
+    },
+    {
+      "icon": "<i class='fa-brands fa-dribbble'></i>",
+      "title": "Dribble"
+    },
+    {
+      "icon": "<i class='fa-brands fa-figma'></i>",
+      "title": "Figma"
+    },
+    {
+      "icon": "<i class='fa-brands fa-facebook-messenger'></i>",
+      "title": "Messenger"
+    },
+    {
+      "icon": "<i class='fa-brands fa-pinterest'></i>",
+      "title": "Pinterest"
+    },
+    {
+      "icon": "<i class='fa-brands fa-tiktok'></i>",
+      "title": "Tik-tok"
+    },
+    {
+      "icon": "<i class='fa-brands fa-whatsapp'></i>",
+      "title": "Whatsapp"
+    },
+    {
+      "icon": "<i class='fa-regular fa-globe'></i>",
+      "title": "Website"
+    }
+  ]
+}
