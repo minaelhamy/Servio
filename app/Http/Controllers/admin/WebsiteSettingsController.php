@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AppSettings;
+use App\Models\PricingPlan;
 use App\Models\Settings;
 use App\Models\Transaction;
 use App\Models\Footerfeatures;
@@ -26,14 +27,15 @@ class WebsiteSettingsController extends Controller
             $vendor_id = Auth::user()->id;
         }
         $settingdata =  Settings::where('vendor_id', $vendor_id)->first();
-        $theme = Transaction::select('themes_id')->where('vendor_id', $vendor_id)->orderByDesc('id')->first();
+        $theme = Transaction::select('themes_id', 'plan_id')->where('vendor_id', $vendor_id)->orderByDesc('id')->first();
+        $currentPlan = PricingPlan::select('id', 'themes_id')->where('id', Auth::user()->plan_id)->first();
         $appsettings = AppSettings::where('vendor_id', $vendor_id)->first();
         $getfooterfeatures = Footerfeatures::where('vendor_id', $vendor_id)->get();
         $getsociallinks = SocialLinks::where('vendor_id', $vendor_id)->get();
         $subscription = SubscriptionSettings::where('vendor_id', $vendor_id)->first();
         $funfacts = FunFact::where('vendor_id', $vendor_id)->get();
         $landingdata = LandingSettings::where('vendor_id', $vendor_id)->first();
-        return view('admin.basic_settings.index', compact('settingdata', 'theme', 'appsettings', 'getfooterfeatures', 'subscription', 'getsociallinks', 'funfacts', 'landingdata'));
+        return view('admin.basic_settings.index', compact('settingdata', 'theme', 'currentPlan', 'appsettings', 'getfooterfeatures', 'subscription', 'getsociallinks', 'funfacts', 'landingdata'));
     }
     public function save(Request $request)
     {
