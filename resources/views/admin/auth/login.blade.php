@@ -46,10 +46,10 @@
                                     id="login-form">
                                     @csrf
                                     <div class="form-group">
-                                        <label for="email" class="form-label">{{ trans('labels.email') }}<span
+                                        <label for="login" class="form-label">{{ trans('labels.username') }}/{{ trans('labels.email') }}<span
                                                 class="text-danger"> * </span></label>
-                                        <input type="email" class="form-control extra-padding" name="email"
-                                            placeholder="{{ trans('labels.email') }}" id="email" required>
+                                        <input type="text" class="form-control extra-padding" name="login"
+                                            placeholder="{{ trans('labels.username') }}/{{ trans('labels.email') }}" id="login" required>
 
                                     </div>
                                     <div class="form-group">
@@ -205,8 +205,8 @@
         @endforeach
     @endif
     <script>
-        function AdminFill(email, password) {
-            $('#email').val(email);
+        function AdminFill(login, password) {
+            $('#login').val(login);
             $('#password').val(password);
         }
         // password eye hide
@@ -227,7 +227,7 @@
         $(document).on("click", "#admin_free_addon_login", function() {
             $("#admin_free_addon_login").attr("disabled", true);
 
-            $("#email").val('admin@gmail.com');
+            $("#login").val('admin@gmail.com');
             $("#password").val('123456');
             SessionSave('free-addon');
         });
@@ -235,7 +235,7 @@
         $(document).on("click", "#vendor_free_addon_login", function() {
             $("#vendor_free_addon_login").attr("disabled", true);
 
-            $("#email").val('vendor1@yopmail.com');
+            $("#login").val('vendor1@yopmail.com');
             $("#password").val('123456');
             SessionSave('free-addon');
         });
@@ -243,7 +243,7 @@
         $(document).on("click", "#admin_free_with_extended_addon_login", function() {
             $("#admin_free_with_extended_addon_login").attr("disabled", true);
 
-            $("#email").val('admin@gmail.com');
+            $("#login").val('admin@gmail.com');
             $("#password").val('123456');
             SessionSave('free-with-extended-addon');
         });
@@ -251,7 +251,7 @@
         $(document).on("click", "#vendor_free_with_extended_addon_login", function() {
             $("#vendor_free_with_extended_addon_login").attr("disabled", true);
 
-            $("#email").val('vendor1@yopmail.com');
+            $("#login").val('vendor1@yopmail.com');
             $("#password").val('123456');
             SessionSave('free-with-extended-addon');
         });
@@ -259,7 +259,7 @@
         $(document).on("click", "#admin_all_addon", function() {
             $("#admin_all_addon").attr("disabled", true);
 
-            $("#email").val('admin@gmail.com');
+            $("#login").val('admin@gmail.com');
             $("#password").val('123456');
             SessionSave('all-addon');
         });
@@ -267,7 +267,7 @@
         $(document).on("click", "#vendor_all_addon", function() {
             $("#vendor_all_addon").attr("disabled", true);
 
-            $("#email").val('vendor1@yopmail.com');
+            $("#login").val('vendor1@yopmail.com');
             $("#password").val('123456');
             SessionSave('all-addon');
         });

@@ -36,8 +36,19 @@ class AdminController extends Controller
     {
 
         try {
+            $request->validate([
+                'login' => 'required|string',
+                'password' => 'required',
+            ]);
+
+            $login = trim((string) $request->login);
+            $user = User::where('email', $login)
+                ->orWhere('username', $login)
+                ->first();
+
             session()->put('admin_login', 1);
-            if (Auth::attempt($request->only('email', 'password'))) {
+            if (!empty($user) && Hash::check($request->password, (string) $user->password)) {
+                Auth::login($user);
                 if (!Auth::user()) {
                     return Redirect::to('/admin/verify')->with('error', Session::get('from_message'));
                 }
