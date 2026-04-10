@@ -251,38 +251,27 @@
                                             @endif
                                             @if (Auth::user()->type == 2 || (Auth::user()->type == 4 && Auth::user()->vendor_id != 1))
                                                 @php
-                                                    $checktheme = @helper::checkthemeaddons('theme_');
+                                                    $availableThemes = @helper::availablePlanThemes('theme-');
                                                     $themes = [];
                                                     if (Auth::user()->allow_without_subscription == 1) {
-                                                        foreach ($checktheme as $ttlthemes) {
-                                                            array_push(
-                                                                $themes,
-                                                                str_replace(
-                                                                    'theme_',
-                                                                    '',
-                                                                    $ttlthemes->unique_identifier,
-                                                                ),
-                                                            );
-                                                        }
+                                                        $themes = $availableThemes;
                                                     } else {
                                                         if (@helper::checkaddons('subscription')) {
                                                             if (empty($theme)) {
-                                                                $themes = [1];
+                                                                $themes = [!empty($settingdata->theme) ? (string) $settingdata->theme : '1'];
                                                             } else {
-                                                                $themes = explode('|', @$theme->themes_id);
+                                                                $themes = array_values(array_intersect(
+                                                                    $availableThemes,
+                                                                    array_map('strval', explode('|', @$theme->themes_id)),
+                                                                ));
                                                             }
                                                         } else {
-                                                            foreach ($checktheme as $ttlthemes) {
-                                                                array_push(
-                                                                    $themes,
-                                                                    str_replace(
-                                                                        'theme_',
-                                                                        '',
-                                                                        $ttlthemes->unique_identifier,
-                                                                    ),
-                                                                );
-                                                            }
+                                                            $themes = $availableThemes;
                                                         }
+                                                    }
+
+                                                    if (empty($themes)) {
+                                                        $themes = [!empty($settingdata->theme) ? (string) $settingdata->theme : '1'];
                                                     }
                                                 @endphp
                                                 <div class="col-md-12">
