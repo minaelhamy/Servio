@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AdminController extends Controller
 {
@@ -42,9 +43,11 @@ class AdminController extends Controller
             ]);
 
             $login = trim((string) $request->login);
-            $user = User::where('email', $login)
-                ->orWhere('username', $login)
-                ->first();
+            $userQuery = User::where('email', $login);
+            if (Schema::hasColumn('users', 'username')) {
+                $userQuery->orWhere('username', $login);
+            }
+            $user = $userQuery->first();
 
             session()->put('admin_login', 1);
             if (!empty($user) && Hash::check($request->password, (string) $user->password)) {
