@@ -263,10 +263,10 @@
                                                         $themes = $availableThemes;
                                                     } else {
                                                         if (@helper::checkaddons('subscription')) {
-                                                            if (!empty($transactionThemeIds)) {
-                                                                $themes = array_values(array_intersect($availableThemes, $transactionThemeIds));
-                                                            } elseif (!empty($planThemeIds)) {
+                                                            if (!empty($planThemeIds)) {
                                                                 $themes = array_values(array_intersect($availableThemes, $planThemeIds));
+                                                            } elseif (!empty($transactionThemeIds)) {
+                                                                $themes = array_values(array_intersect($availableThemes, $transactionThemeIds));
                                                             } else {
                                                                 $themes = [!empty($settingdata->theme) ? (string) $settingdata->theme : '1'];
                                                             }
