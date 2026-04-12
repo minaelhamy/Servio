@@ -1,6 +1,14 @@
 <!-- {{-- For Large Devices --}} -->
 
 <nav class="sidebar sidebar-lg">
+    @php
+        $sidebarVendorName = null;
+        if (Auth::user()->type == 4) {
+            $sidebarVendorName = optional(App\Models\User::find(Auth::user()->vendor_id))->name;
+        } elseif (Auth::user()->type == 2) {
+            $sidebarVendorName = Auth::user()->name;
+        }
+    @endphp
 
     <div class="d-flex justify-content-center align-items-center mb-3 border-bottom">
 
@@ -9,7 +17,7 @@
             @if (Auth::user()->type == 1 || (Auth::user()->type == 4 && Auth::user()->vendor_id == 1))
                 <a href="" class="text-white color-changer fs-4">{{ trans('labels.admin_title') }}</a>
             @elseif(Auth::user()->type == 2 || (Auth::user()->type == 4 && Auth::user()->vendor_id != 1))
-                <a href="" class="text-white color-changer fs-4">{{ trans('labels.vendor_title') }}</a>
+                <a href="" class="text-white color-changer fs-4">{{ $sidebarVendorName }}</a>
             @endif
 
         </div>
@@ -29,7 +37,7 @@
         @if (Auth::user()->type == 1 || (Auth::user()->type == 4 && Auth::user()->vendor_id == 1))
             <a href="" class="text-white fs-4 color-changer">{{ trans('labels.admin_title') }}</a>
         @elseif(Auth::user()->type == 2 || (Auth::user()->type == 4 && Auth::user()->vendor_id != 1))
-            <a href="" class="text-white fs-4 color-changer">{{ trans('labels.vendor_title') }}</a>
+            <a href="" class="text-white fs-4 color-changer">{{ $sidebarVendorName }}</a>
         @endif
 
         <button class="btn text-white color-changer" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarcollapse"

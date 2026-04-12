@@ -48,19 +48,6 @@
                 <span>{{ trans('labels.dashboards') }}</span>
             </a>
         </li>
-        @if (Auth::user()->type == 1 || (Auth::user()->type == 4 && Auth::user()->vendor_id == 1))
-            <li
-                class="nav-item mb-2 fs-7 {{ helper::check_menu($role_id, 'role_addons_manager') == 1 ? 'd-block' : 'd-none' }}">
-                <a class="nav-link d-flex rounded {{ request()->is('admin/apps*') ? 'active' : '' }}"
-                    aria-current="page" href="{{ URL::to('/admin/apps') }}">
-                    <i class="fa-solid fa-rocket"></i>
-                    <p class="w-100 d-flex justify-content-between align-items-center">
-                        <span>{{ trans('labels.addons_manager') }}</span>
-                        <span class="rainbowText float-right">Premium</span>
-                    </p>
-                </a>
-            </li>
-        @endif
         @if (@helper::checkaddons('customer_login'))
             <li
                 class="nav-item mt-3 {{ helper::check_menu($role_id, 'role_vendors') == 1 || helper::check_menu($role_id, 'role_customers') == 1 ? 'd-block' : 'd-none' }}">
