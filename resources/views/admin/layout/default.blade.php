@@ -36,9 +36,6 @@
         <link rel="icon" type="image" sizes="16x16"
             href="{{ helper::image_path(@helper::appdata('')->favicon) }}"><!-- Favicon icon -->
     @endif
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet"
         href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/bootstrap/bootstrap-select.min.css') }}">
@@ -58,7 +55,7 @@
     <!-- Sweetalert CSS -->
 
     <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/style.css') }}"><!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/hatchers-brand.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/hatchers-brand.css?v=' . @filemtime(storage_path('app/public/admin-assets/css/hatchers-brand.css'))) }}">
 
     <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/responsive.css') }}">
 

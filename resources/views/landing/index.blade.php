@@ -11,17 +11,10 @@
                         <p class="pt-4 px-2 mx-auto">{{ trans('landing.hero_banner_description') }}</p>
 
                         <div class="mt-5 d-flex flex-wrap justify-content-center align-items-center gap-3">
-                            <a href="@if (env('Environment') == 'sendbox') {{ URL::to('/admin') }} @else {{ helper::appdata('')->vendor_register == 1 ? URL::to('/admin/register') : URL::to('/admin') }} @endif"
+                            <a href="{{ URL::to('/admin') }}"
                                 class="btn-secondary rounded-2 m-0" target="_blank">
                                 {{ trans('landing.get_started') }}
                             </a>
-                            @if (helper::planlist()->count() > 0)
-                                <a href="@if (env('Environment') == 'sendbox') https://1.envato.market/KeRzWn @else {{ URL::to('/#pricing-plans') }} @endif"
-                                    class="btn-light border-white m-0 rounded-2"
-                                    @if (env('Environment') == 'sendbox') target="_blank" @endif>
-                                    {{ trans('labels.buy_now') }}
-                                </a>
-                            @endif
                             @if (env('Environment') == 'sendbox')
                                 <div class="dropdown">
                                     @php
@@ -79,21 +72,12 @@
                                     <div
                                         class="row g-3 {{ session()->get('direction') == 2 ? 'justify-content-end' : 'justify-content-end' }} ">
                                         <div class="col-6 col-sm-auto">
-                                            <a href="@if (env('Environment') == 'sendbox') {{ URL::to('/admin') }} @else {{ helper::appdata('')->vendor_register == 1 ? URL::to('/admin/register') : URL::to('/admin') }} @endif"
+                                            <a href="{{ URL::to('/admin') }}"
                                                 class="btn-secondary text-center w-100 fs-7 m-0 btn-class rounded-2"
                                                 target="_blank">
                                                 {{ trans('landing.get_started') }}
                                             </a>
                                         </div>
-                                        @if (helper::planlist()->count() > 0)
-                                            <div class="col-6 col-sm-auto">
-                                                <a href="@if (env('Environment') == 'sendbox') https://1.envato.market/KeRzWn @else {{ URL::to('/#pricing-plans') }} @endif"
-                                                    class="btn-border-dark text-center fs-7 w-100 m-0 rounded-2"
-                                                    @if (env('Environment') == 'sendbox') target="_blank" @endif>
-                                                    {{ trans('labels.buy_now') }}
-                                                </a>
-                                            </div>
-                                        @endif
                                     </div>
                                 </div>
 
@@ -209,16 +193,10 @@
                     {{ trans('landing.free_section_description') }}
                 </P>
                 <div class="text-center mt-4">
-                    <a href="@if (env('Environment') == 'sendbox') {{ URL::to('/admin') }} @else {{ helper::appdata('')->vendor_register == 1 ? URL::to('/admin/register') : URL::to('/admin') }} @endif"
+                    <a href="{{ URL::to('/admin') }}"
                         class="btn-border-dark rounded-2 fs-7" target="_blank">
                         {{ trans('landing.get_started') }}
                     </a>
-                    @if (helper::planlist()->count() > 0)
-                        <a href="@if (env('Environment') == 'sendbox') https://1.envato.market/KeRzWn @else {{ URL::to('/#pricing-plans') }} @endif"
-                            class="btn-secondary rounded-2 fs-7" @if (env('Environment') == 'sendbox') target="_blank" @endif>
-                            {{ trans('labels.buy_now') }}
-                        </a>
-                    @endif
                 </div>
             </div>
         </div>
@@ -470,7 +448,7 @@
                                             </ul>
                                         </div>
                                         <div class="card-footer p-0">
-                                            <a href="@if (env('Environment') == 'sendbox') {{ URL::to('/admin') }} @else {{ helper::appdata('')->vendor_register == 1 ? URL::to('/admin/register') : URL::to('/admin') }} @endif"
+                                            <a href="{{ URL::to('/admin') }}"
                                                 target="_blank"
                                                 class="px-5 py-3 theme-btn style5 rounded-bottom-4 text-center">
                                                 {{ trans('landing.get_started') }}

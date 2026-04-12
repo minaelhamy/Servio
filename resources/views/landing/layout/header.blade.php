@@ -219,7 +219,7 @@
                             </li>
                         </ul>
                     </div>
-                    <a href="@if (env('Environment') == 'sendbox') {{ URL::to('/admin') }} @else {{ helper::appdata('')->vendor_register == 1 ? URL::to('/admin/register') : URL::to('/admin') }} @endif"
+                    <a href="{{ URL::to('/admin') }}"
                         target="_blank" class="btn-secondary text-center w-100 fs-7 m-0 btn-class rounded-2">
                         {{ trans('landing.get_started') }}
                     </a>
