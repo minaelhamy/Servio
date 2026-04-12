@@ -23,6 +23,9 @@
     <title>{{ helper::appdata('')->web_title }}</title>
 
     <link rel="icon" type="image" sizes="16x16" href="{{ helper::image_path(helper::appdata('')->favicon) }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Favicon icon -->
 
@@ -39,6 +42,7 @@
     <!-- FontAwesome CSS -->
 
     <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/style.css') }}"><!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/hatchers-brand.css') }}">
 
     <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/responsive.css') }}">
     <style>
