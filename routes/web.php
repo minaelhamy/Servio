@@ -36,6 +36,7 @@ use App\Http\Controllers\addons\include\CurrencyController;
 use App\Http\Controllers\addons\ProductQuestionAnswerController;
 use App\Http\Controllers\admin\OrderController;
 use App\Http\Controllers\admin\POSController;
+use App\Http\Controllers\Integration\AtlasAssistantController;
 use App\Models\ProductQuestionAnswer;
 
 /*
@@ -73,6 +74,7 @@ Route::group(['namespace' => 'admin', 'prefix' => 'admin'], function () {
         // common
         Route::get('/logout', [AdminController::class, 'logout']);
         Route::get('/dashboard', [AdminController::class, 'index']);
+        Route::post('/atlas-assistant/chat', [AtlasAssistantController::class, 'chat']);
         // mobile section
         Route::post('/mobile_section/save', [WebsiteSettingsController::class, 'save']);
         // contact settings

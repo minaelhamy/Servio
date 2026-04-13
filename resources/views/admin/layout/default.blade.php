@@ -353,6 +353,7 @@
     <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/jquery/jquery-ui.min.js') }}"></script>
     <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/common.js') }}"></script><!-- Common JS -->
     <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/calendar/moment.min.js') }}"></script>
+    @include('admin.layout.atlas-assistant')
     @yield('scripts')
 
 </body>
