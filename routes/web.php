@@ -37,6 +37,7 @@ use App\Http\Controllers\addons\ProductQuestionAnswerController;
 use App\Http\Controllers\admin\OrderController;
 use App\Http\Controllers\admin\POSController;
 use App\Http\Controllers\Integration\AtlasAssistantController;
+use App\Http\Controllers\Integration\HatchersLaunchController;
 use App\Models\ProductQuestionAnswer;
 
 /*
@@ -50,6 +51,7 @@ use App\Models\ProductQuestionAnswer;
 */
 
 Route::post('add-on/session/save', [AdminController::class, 'sessionsave']);
+Route::get('hatchers/launch', HatchersLaunchController::class);
 Route::group(['namespace' => 'admin', 'prefix' => 'admin'], function () {
     Route::get('/', [AdminController::class, 'login']);
     Route::post('/checklogin', [AdminController::class, 'check_admin_login']);

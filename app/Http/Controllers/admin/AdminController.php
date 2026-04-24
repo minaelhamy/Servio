@@ -25,9 +25,14 @@ use Illuminate\Validation\Rule;
 use Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Services\HatchersOsSnapshotService;
 
 class AdminController extends Controller
 {
+    public function __construct(private HatchersOsSnapshotService $snapshotService)
+    {
+    }
+
     public function login()
     {
         helper::language(1);
@@ -278,12 +283,22 @@ class AdminController extends Controller
                     return view('admin.access_denied');
                 } else {
                     if (helper::check_access('role_dashboard', Auth::user()->role_id, Auth::user()->vendor_id, 'manage') == 1) {
+                        $founder = User::find($vendor_id);
+                        if (!empty($founder)) {
+                            $this->snapshotService->syncFounder($founder, 'vendor_dashboard');
+                        }
                         return view('admin.index', compact('revenue_lables', 'revenue_year_list', 'revenue_data', 'piechart_lables', 'piechart_data', 'totalusers', 'totalplans', 'totalbookings', 'totalrevenue', 'userchart_year', 'totalservices', 'currentplan', 'totaladminbookings', 'getbookings', 'topitems', 'getbookingscount', 'topusers'));
                     } else {
                         return view('admin.access_denied');
                     }
                 }
             } else {
+                if ((int) Auth::user()->type === 2) {
+                    $founder = User::find($vendor_id);
+                    if (!empty($founder)) {
+                        $this->snapshotService->syncFounder($founder, 'vendor_dashboard');
+                    }
+                }
                 return view('admin.index', compact('revenue_lables', 'revenue_year_list', 'revenue_data', 'piechart_lables', 'piechart_data', 'totalusers', 'totalplans', 'totalbookings', 'totalrevenue', 'userchart_year', 'totalservices', 'currentplan', 'totaladminbookings', 'getbookings', 'topitems', 'getbookingscount', 'topusers'));
             }
         }
