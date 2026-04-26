@@ -445,6 +445,9 @@ class HatchersActionController extends Controller
                 return $selectedAdditionalServices->contains(Str::lower(trim((string) $item->name)));
             });
         $additionalServicesPrice = (float) $additionalServices->sum(fn (AdditionalService $item): float => (float) ($item->price ?? 0));
+        $paymentType = trim((string) ($payload['payment_type'] ?? '1'));
+        $paymentStatus = trim((string) ($payload['payment_status'] ?? 'unpaid')) === 'paid' ? 2 : 1;
+        $paymentId = trim((string) ($payload['payment_id'] ?? ''));
 
         $defaultStatus = CustomStatus::query()
             ->where('vendor_id', $vendorId)
@@ -485,9 +488,9 @@ class HatchersActionController extends Controller
         $booking->tax = '';
         $booking->tax_name = '';
         $booking->grand_total = (float) ($service->price ?? 0) + $additionalServicesPrice;
-        $booking->payment_status = 1;
-        $booking->transaction_id = '';
-        $booking->transaction_type = '';
+        $booking->payment_status = $paymentStatus;
+        $booking->transaction_id = $paymentId;
+        $booking->transaction_type = $paymentType !== '' ? $paymentType : '';
         $booking->status = $defaultStatus?->id;
         $booking->status_type = (int) ($defaultStatus?->type ?? 1);
         $booking->staff_id = trim((string) ($service->staff_id ?? ''));
