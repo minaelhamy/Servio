@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Banner;
 use App\Models\Category;
+use App\Models\Settings;
 use App\Models\Service;
 use App\Models\Blog;
 use App\Models\AppSettings;
