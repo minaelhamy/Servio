@@ -202,7 +202,6 @@ class HatchersActionController extends Controller
         }
         if ($themeTemplate !== '') {
             $settings->theme = $themeTemplate;
-            $settings->template = $themeTemplate;
         }
         if ($customDomain !== '') {
             $settings->custom_domain = $customDomain;
