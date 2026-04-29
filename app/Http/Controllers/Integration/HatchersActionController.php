@@ -16,8 +16,10 @@ use App\Models\AdditionalService;
 use App\Models\Banner;
 use App\Models\Faq;
 use App\Models\Features;
+use App\Models\Gallery;
 use App\Models\LandingSettings;
 use App\Models\SocialLinks;
+use App\Models\ServiceImage;
 use App\Models\Tax;
 use App\Models\Testimonials;
 use App\Models\Timing;
@@ -108,6 +110,7 @@ class HatchersActionController extends Controller
         }
 
         $title = trim((string) ($payload['title'] ?? ''));
+        $mediaAssets = collect((array) ($payload['media_assets'] ?? []))->filter(fn ($item): bool => is_array($item))->values();
         if ($title === '') {
             $title = 'New service draft';
         }
@@ -136,6 +139,11 @@ class HatchersActionController extends Controller
         $service->is_deleted = 2;
         $service->is_imported = 2;
         $service->save();
+
+        if ($mediaAssets->isNotEmpty()) {
+            $this->syncCategoryAssetFromMedia($vendorId, $categoryId, $mediaAssets->all());
+            $this->syncServiceImagesFromMedia((int) $service->id, $mediaAssets->all());
+        }
 
         $this->cloneVendorTimings($vendorId, (int) $service->id);
         $this->snapshotService->syncFounder($user, 'os_service_created');
@@ -170,6 +178,9 @@ class HatchersActionController extends Controller
         $storyTitle = trim((string) ($payload['story_title'] ?? ''));
         $storySubtitle = trim((string) ($payload['story_subtitle'] ?? ''));
         $storyDescription = trim((string) ($payload['story_description'] ?? ''));
+        $heroHeadline = trim((string) ($payload['hero_headline'] ?? ''));
+        $heroSubhead = trim((string) ($payload['hero_subhead'] ?? ''));
+        $heroBrief = trim((string) ($payload['hero_brief'] ?? ''));
         $mediaAssets = collect((array) ($payload['media_assets'] ?? []))->filter(fn ($item): bool => is_array($item))->values();
         if (
             $websiteTitle === '' &&
@@ -191,6 +202,9 @@ class HatchersActionController extends Controller
             $storyTitle === '' &&
             $storySubtitle === '' &&
             $storyDescription === '' &&
+            $heroHeadline === '' &&
+            $heroSubhead === '' &&
+            $heroBrief === '' &&
             $mediaAssets->isEmpty()
         ) {
             return response()->json(['success' => false, 'error' => 'Website update needs a title, theme, or custom domain.'], 422);
@@ -209,6 +223,15 @@ class HatchersActionController extends Controller
         }
         if ($description !== '') {
             $settings->footer_description = $description;
+        }
+        if ($heroSubhead !== '' && $this->settingsColumnExists('homepage_title')) {
+            $settings->homepage_title = $heroSubhead;
+        }
+        if ($heroHeadline !== '' && $this->settingsColumnExists('homepage_subtitle')) {
+            $settings->homepage_subtitle = $heroHeadline;
+        }
+        if ($heroBrief !== '' && $this->settingsColumnExists('description')) {
+            $settings->description = $heroBrief;
         }
         if ($metaTitle !== '') {
             $settings->meta_title = $metaTitle;
@@ -363,6 +386,11 @@ class HatchersActionController extends Controller
 
         if ($mediaAssets->isNotEmpty()) {
             $this->applyWebsiteMedia($vendorId, $settings, $mediaAssets->all());
+            $this->syncCategoryAssetFromMedia($vendorId, null, $mediaAssets->all());
+            $this->syncExistingServiceAssetsFromMedia($vendorId, $mediaAssets->all());
+            $this->syncTestimonialAssetsFromMedia($vendorId, $mediaAssets->all());
+            $this->syncWhyChooseAssetsFromMedia($vendorId, $mediaAssets->all());
+            $this->syncGalleryAssetsFromMedia($vendorId, $mediaAssets->all());
         }
 
         $this->snapshotService->syncFounder($user, 'service_setup');
@@ -1390,10 +1418,15 @@ class HatchersActionController extends Controller
             ->first();
 
         if (!empty($category)) {
+            if ($name === '' && trim((string) $category->name) === 'Hatchers Drafts') {
+                $category->name = 'Services';
+                $category->slug = $this->uniqueCategorySlug('Services');
+                $category->save();
+            }
             return (int) $category->id;
         }
 
-        $name = $name !== '' ? $name : 'Hatchers Drafts';
+        $name = $name !== '' ? $name : 'Services';
         $newCategory = new Category();
         $newCategory->vendor_id = $vendorId;
         $newCategory->name = $name;
@@ -1706,6 +1739,209 @@ class HatchersActionController extends Controller
 
         $banner->image = $filename;
         $banner->save();
+    }
+
+    private function syncCategoryAssetFromMedia(int $vendorId, ?int $categoryId, array $mediaAssets): void
+    {
+        $asset = $this->findMediaTarget($mediaAssets, ['category', 'section_one', 'hero']);
+        if (!is_array($asset)) {
+            return;
+        }
+
+        $category = $categoryId
+            ? Category::where('vendor_id', $vendorId)->where('id', $categoryId)->first()
+            : Category::where('vendor_id', $vendorId)->where('is_deleted', 2)->orderBy('reorder_id')->orderBy('id')->first();
+
+        if (empty($category) || !$this->tableColumnExists('categories', 'image')) {
+            return;
+        }
+
+        $filename = $this->storeRemoteImage(
+            trim((string) ($asset['source_url'] ?? '')),
+            storage_path('app/public/admin-assets/images/categories/'),
+            'category'
+        );
+
+        if (!$filename) {
+            return;
+        }
+
+        $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/categories/' . (string) ($category->image ?? '')));
+        $category->image = $filename;
+        $category->save();
+    }
+
+    private function syncServiceImagesFromMedia(int $serviceId, array $mediaAssets): void
+    {
+        $targets = ['service_primary', 'service_detail', 'service_support', 'hero', 'section_one', 'section_two', 'section_three'];
+        $assets = collect($targets)
+            ->map(fn (string $target) => $this->findMediaTarget($mediaAssets, [$target]))
+            ->filter(fn ($asset) => is_array($asset) && trim((string) ($asset['source_url'] ?? '')) !== '')
+            ->values();
+
+        if ($assets->isEmpty()) {
+            return;
+        }
+
+        foreach (ServiceImage::where('service_id', $serviceId)->get() as $existingImage) {
+            $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/service/' . (string) ($existingImage->image ?? '')));
+            $existingImage->delete();
+        }
+
+        foreach ($assets as $index => $asset) {
+            $filename = $this->storeRemoteImage(
+                trim((string) ($asset['source_url'] ?? '')),
+                storage_path('app/public/admin-assets/images/service/'),
+                'service'
+            );
+
+            if (!$filename) {
+                continue;
+            }
+
+            $image = new ServiceImage();
+            $image->service_id = $serviceId;
+            $image->image = $filename;
+            if ($this->tableColumnExists('service_images', 'reorder_id')) {
+                $image->reorder_id = $index + 1;
+            }
+            if ($this->tableColumnExists('service_images', 'is_imported')) {
+                $image->is_imported = 2;
+            }
+            $image->save();
+        }
+    }
+
+    private function syncExistingServiceAssetsFromMedia(int $vendorId, array $mediaAssets): void
+    {
+        $services = Service::where('vendor_id', $vendorId)
+            ->where('is_deleted', 2)
+            ->orderBy('reorder_id')
+            ->orderBy('id')
+            ->take(3)
+            ->get();
+
+        foreach ($services as $service) {
+            $this->syncServiceImagesFromMedia((int) $service->id, $mediaAssets);
+        }
+    }
+
+    private function syncTestimonialAssetsFromMedia(int $vendorId, array $mediaAssets): void
+    {
+        $assets = collect([
+            $this->findMediaTarget($mediaAssets, ['testimonial_primary', 'section_two', 'story', 'hero']),
+            $this->findMediaTarget($mediaAssets, ['story', 'section_one', 'hero']),
+            $this->findMediaTarget($mediaAssets, ['gallery_primary', 'section_three', 'hero']),
+        ])->filter(fn ($asset) => is_array($asset) && trim((string) ($asset['source_url'] ?? '')) !== '')->values();
+
+        if ($assets->isEmpty() || !$this->tableColumnExists('testimonials', 'image')) {
+            return;
+        }
+
+        $testimonials = Testimonials::where('vendor_id', $vendorId)
+            ->whereNull('service_id')
+            ->whereNull('user_id')
+            ->orderBy('reorder_id')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($testimonials as $index => $testimonial) {
+            $asset = $assets[$index % $assets->count()] ?? null;
+            if (!is_array($asset)) {
+                continue;
+            }
+
+            $filename = $this->storeRemoteImage(
+                trim((string) ($asset['source_url'] ?? '')),
+                storage_path('app/public/admin-assets/images/testimonials/'),
+                'testimonial'
+            );
+
+            if (!$filename) {
+                continue;
+            }
+
+            $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/testimonials/' . (string) ($testimonial->image ?? '')));
+            $testimonial->image = $filename;
+            $testimonial->save();
+        }
+    }
+
+    private function syncWhyChooseAssetsFromMedia(int $vendorId, array $mediaAssets): void
+    {
+        $asset = $this->findMediaTarget($mediaAssets, ['why_choose_item', 'story', 'section_one', 'hero']);
+        if (!is_array($asset) || !$this->tableColumnExists('whychooseus', 'image')) {
+            return;
+        }
+
+        $items = WhyChooseUs::where('vendor_id', $vendorId)->orderBy('reorder_id')->orderBy('id')->get();
+        foreach ($items as $item) {
+            $filename = $this->storeRemoteImage(
+                trim((string) ($asset['source_url'] ?? '')),
+                storage_path('app/public/admin-assets/images/index/'),
+                'choose'
+            );
+
+            if (!$filename) {
+                continue;
+            }
+
+            $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/index/' . (string) ($item->image ?? '')));
+            $item->image = $filename;
+            $item->save();
+        }
+    }
+
+    private function syncGalleryAssetsFromMedia(int $vendorId, array $mediaAssets): void
+    {
+        $assets = collect([
+            $this->findMediaTarget($mediaAssets, ['gallery_primary', 'story', 'hero']),
+            $this->findMediaTarget($mediaAssets, ['gallery_secondary', 'section_one', 'section_two']),
+            $this->findMediaTarget($mediaAssets, ['gallery_tertiary', 'section_three', 'faq']),
+        ])->filter(fn ($asset) => is_array($asset) && trim((string) ($asset['source_url'] ?? '')) !== '')->values();
+
+        if ($assets->isEmpty() || !$this->tableColumnExists('gallery', 'image')) {
+            return;
+        }
+
+        $existing = Gallery::where('vendor_id', $vendorId)->orderBy('reorder_id')->orderBy('id')->get();
+        foreach ($assets as $index => $asset) {
+            $gallery = $existing[$index] ?? new Gallery(['vendor_id' => $vendorId]);
+            $filename = $this->storeRemoteImage(
+                trim((string) ($asset['source_url'] ?? '')),
+                storage_path('app/public/admin-assets/images/gallery/'),
+                'gallery'
+            );
+
+            if (!$filename) {
+                continue;
+            }
+
+            $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/gallery/' . (string) ($gallery->image ?? '')));
+            $gallery->vendor_id = $vendorId;
+            $gallery->image = $filename;
+            if ($this->tableColumnExists('gallery', 'reorder_id')) {
+                $gallery->reorder_id = $index + 1;
+            }
+            $gallery->save();
+        }
+    }
+
+    private function findMediaTarget(array $mediaAssets, array $targets): ?array
+    {
+        foreach ($targets as $target) {
+            foreach ($mediaAssets as $asset) {
+                if (!is_array($asset)) {
+                    continue;
+                }
+
+                if (trim((string) ($asset['target'] ?? '')) === $target) {
+                    return $asset;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function storeRemoteImage(string $url, string $directory, string $prefix): ?string
