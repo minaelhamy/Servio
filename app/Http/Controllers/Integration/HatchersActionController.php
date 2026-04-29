@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 
 class HatchersActionController extends Controller
 {
@@ -203,7 +204,7 @@ class HatchersActionController extends Controller
         if ($themeTemplate !== '') {
             $settings->theme = $themeTemplate;
         }
-        if ($customDomain !== '') {
+        if ($customDomain !== '' && $this->settingsColumnExists('custom_domain')) {
             $settings->custom_domain = $customDomain;
         }
         if ($description !== '') {
@@ -224,10 +225,10 @@ class HatchersActionController extends Controller
         if ($businessAddress !== '') {
             $settings->address = $businessAddress;
         }
-        if ($whatsappNumber !== '') {
+        if ($whatsappNumber !== '' && $this->settingsColumnExists('whatsapp_number')) {
             $settings->whatsapp_number = $whatsappNumber;
         }
-        if ($aboutContent !== '') {
+        if ($aboutContent !== '' && $this->settingsColumnExists('about_content')) {
             $settings->about_content = $aboutContent;
         }
         if ($storyTitle !== '') {
@@ -364,6 +365,17 @@ class HatchersActionController extends Controller
             'public_url' => helper::storefront_url($user),
             'edit_url' => url('/admin/basic_settings'),
         ]);
+    }
+
+    private function settingsColumnExists(string $column): bool
+    {
+        static $columns = null;
+
+        if ($columns === null) {
+            $columns = array_fill_keys(Schema::getColumnListing('settings'), true);
+        }
+
+        return isset($columns[$column]);
     }
 
     private function publishWebsite(User $user)
