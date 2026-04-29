@@ -257,7 +257,9 @@ class HatchersActionController extends Controller
 
             $faq->question = $question;
             $faq->answer = $answer;
-            $faq->reorder_id = $index + 1;
+            if ($this->tableColumnExists('faqs', 'reorder_id')) {
+                $faq->reorder_id = $index + 1;
+            }
             $faq->save();
         }
 
@@ -278,7 +280,9 @@ class HatchersActionController extends Controller
                 $social->vendor_id = $vendorId;
             }
 
-            $social->icon = $icon;
+            if ($this->tableColumnExists('social_links', 'icon')) {
+                $social->icon = $icon;
+            }
             $social->link = $url;
             $social->save();
         }
@@ -301,7 +305,9 @@ class HatchersActionController extends Controller
 
             $feature->title = $title;
             $feature->description = $description;
-            $feature->icon = $feature->icon ?: '<i class="fa-solid fa-check"></i>';
+            if ($this->tableColumnExists('features', 'icon')) {
+                $feature->icon = $feature->icon ?: '<i class="fa-solid fa-check"></i>';
+            }
             $feature->save();
         }
 
@@ -324,9 +330,13 @@ class HatchersActionController extends Controller
             }
 
             $testimonial->name = $name;
-            $testimonial->position = trim((string) ($testimonialItem['position'] ?? 'Client'));
+            if ($this->tableColumnExists('testimonials', 'position')) {
+                $testimonial->position = trim((string) ($testimonialItem['position'] ?? 'Client'));
+            }
             $testimonial->description = $description;
-            $testimonial->star = max(1, min(5, (int) ($testimonialItem['star'] ?? 5)));
+            if ($this->tableColumnExists('testimonials', 'star')) {
+                $testimonial->star = max(1, min(5, (int) ($testimonialItem['star'] ?? 5)));
+            }
             $testimonial->save();
         }
 
@@ -369,13 +379,18 @@ class HatchersActionController extends Controller
 
     private function settingsColumnExists(string $column): bool
     {
-        static $columns = null;
+        return $this->tableColumnExists('settings', $column);
+    }
 
-        if ($columns === null) {
-            $columns = array_fill_keys(Schema::getColumnListing('settings'), true);
+    private function tableColumnExists(string $table, string $column): bool
+    {
+        static $columnsByTable = [];
+
+        if (!array_key_exists($table, $columnsByTable)) {
+            $columnsByTable[$table] = array_fill_keys(Schema::getColumnListing($table), true);
         }
 
-        return isset($columns[$column]);
+        return isset($columnsByTable[$table][$column]);
     }
 
     private function publishWebsite(User $user)
