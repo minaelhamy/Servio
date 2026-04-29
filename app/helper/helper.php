@@ -1100,6 +1100,10 @@ class helper
             return $vendor;
         }
 
+        if (!self::storefrontAliasTableExists()) {
+            return null;
+        }
+
         $alias = StorefrontAlias::where('slug', $slug)->first();
         if (empty($alias)) {
             return null;
@@ -1111,6 +1115,15 @@ class helper
         }
 
         return $vendor;
+    }
+
+    private static function storefrontAliasTableExists(): bool
+    {
+        try {
+            return DB::getSchemaBuilder()->hasTable('storefront_aliases');
+        } catch (\Throwable $exception) {
+            return false;
+        }
     }
     public static function service_count($category_id)
     {

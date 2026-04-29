@@ -1652,7 +1652,7 @@ class HatchersActionController extends Controller
         $legacySlug = trim(strtolower($legacySlug), '/');
         $currentSlug = trim(strtolower($currentSlug), '/');
 
-        if ($legacySlug === '' || $legacySlug === $currentSlug) {
+        if ($legacySlug === '' || $legacySlug === $currentSlug || !$this->storefrontAliasTableExists()) {
             return;
         }
 
@@ -1660,6 +1660,15 @@ class HatchersActionController extends Controller
             ['slug' => $legacySlug],
             ['vendor_id' => $vendorId]
         );
+    }
+
+    private function storefrontAliasTableExists(): bool
+    {
+        try {
+            return DB::getSchemaBuilder()->hasTable('storefront_aliases');
+        } catch (\Throwable $exception) {
+            return false;
+        }
     }
 
     private function socialIconMarkup(string $network, string $url): string
