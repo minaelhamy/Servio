@@ -20,6 +20,7 @@ use App\Models\Gallery;
 use App\Models\LandingSettings;
 use App\Models\SocialLinks;
 use App\Models\ServiceImage;
+use App\Models\StorefrontAlias;
 use App\Models\Tax;
 use App\Models\Testimonials;
 use App\Models\Timing;
@@ -160,6 +161,7 @@ class HatchersActionController extends Controller
     private function updateWebsite(User $user, int $vendorId, array $payload)
     {
         $websiteTitle = trim((string) ($payload['website_title'] ?? ''));
+        $websitePath = trim((string) ($payload['website_path'] ?? ''));
         $themeTemplate = trim((string) ($payload['theme_template'] ?? ''));
         $customDomain = trim((string) ($payload['custom_domain'] ?? ''));
         $description = trim((string) ($payload['description'] ?? ''));
@@ -184,6 +186,7 @@ class HatchersActionController extends Controller
         $mediaAssets = collect((array) ($payload['media_assets'] ?? []))->filter(fn ($item): bool => is_array($item))->values();
         if (
             $websiteTitle === '' &&
+            $websitePath === '' &&
             $themeTemplate === '' &&
             $customDomain === '' &&
             $description === '' &&
@@ -212,6 +215,12 @@ class HatchersActionController extends Controller
 
         $settings = Settings::firstOrNew(['vendor_id' => $vendorId]);
         $settings->vendor_id = $vendorId;
+        if ($websitePath !== '') {
+            $previousSlug = trim((string) $user->slug);
+            $user->slug = $this->uniqueStorefrontSlug($websitePath, (int) $user->id);
+            $user->save();
+            $this->storeLegacyStorefrontAlias($vendorId, $previousSlug, $user->slug);
+        }
         if ($websiteTitle !== '') {
             $settings->web_title = $websiteTitle;
         }
@@ -388,6 +397,7 @@ class HatchersActionController extends Controller
             $this->applyWebsiteMedia($vendorId, $settings, $mediaAssets->all());
             $this->syncCategoryAssetFromMedia($vendorId, null, $mediaAssets->all());
             $this->syncExistingServiceAssetsFromMedia($vendorId, $mediaAssets->all());
+            $this->syncFeatureAssetsFromMedia($vendorId, $mediaAssets->all());
             $this->syncTestimonialAssetsFromMedia($vendorId, $mediaAssets->all());
             $this->syncWhyChooseAssetsFromMedia($vendorId, $mediaAssets->all());
             $this->syncGalleryAssetsFromMedia($vendorId, $mediaAssets->all());
@@ -400,7 +410,7 @@ class HatchersActionController extends Controller
             'title' => $websiteTitle !== '' ? $websiteTitle : (string) ($settings->web_title ?? ''),
             'theme_template' => $themeTemplate !== '' ? $themeTemplate : (string) ($settings->theme ?? ''),
             'custom_domain' => $customDomain,
-            'public_url' => helper::storefront_url($user),
+            'public_url' => helper::storefront_url($user->fresh()),
             'edit_url' => url('/admin/basic_settings'),
         ]);
     }
@@ -427,7 +437,7 @@ class HatchersActionController extends Controller
 
         return response()->json([
             'success' => true,
-            'public_url' => helper::storefront_url($user),
+            'public_url' => helper::storefront_url($user->fresh()),
             'edit_url' => url('/admin/dashboard'),
             'title' => 'Servio website published',
         ]);
@@ -1619,6 +1629,39 @@ class HatchersActionController extends Controller
         return $slug;
     }
 
+    private function uniqueStorefrontSlug(string $value, ?int $ignoreUserId = null): string
+    {
+        $base = Str::slug($value, '-');
+        $slug = $base !== '' ? $base : 'your-business';
+        $tries = 1;
+
+        while (
+            User::where('slug', $slug)
+                ->when($ignoreUserId !== null, fn ($query) => $query->where('id', '!=', $ignoreUserId))
+                ->exists()
+        ) {
+            $slug = ($base !== '' ? $base : 'your-business') . '-' . $tries;
+            $tries++;
+        }
+
+        return $slug;
+    }
+
+    private function storeLegacyStorefrontAlias(int $vendorId, string $legacySlug, string $currentSlug): void
+    {
+        $legacySlug = trim(strtolower($legacySlug), '/');
+        $currentSlug = trim(strtolower($currentSlug), '/');
+
+        if ($legacySlug === '' || $legacySlug === $currentSlug) {
+            return;
+        }
+
+        StorefrontAlias::updateOrCreate(
+            ['slug' => $legacySlug],
+            ['vendor_id' => $vendorId]
+        );
+    }
+
     private function socialIconMarkup(string $network, string $url): string
     {
         $value = Str::lower(trim($network));
@@ -1655,6 +1698,17 @@ class HatchersActionController extends Controller
             if ($filename) {
                 $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/banner/' . (string) ($settings->home_banner ?? '')));
                 $settings->home_banner = $filename;
+                if ($this->settingsColumnExists('og_image')) {
+                    $ogFilename = $this->storeRemoteImage(
+                        trim((string) ($hero['source_url'] ?? '')),
+                        storage_path('app/public/admin-assets/images/about/og_image/'),
+                        'og-image'
+                    );
+                    if ($ogFilename) {
+                        $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/about/og_image/' . (string) ($settings->og_image ?? '')));
+                        $settings->og_image = $ogFilename;
+                    }
+                }
             }
         }
 
@@ -1679,6 +1733,17 @@ class HatchersActionController extends Controller
             if ($filename) {
                 $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/index/' . (string) ($landing->faq_image ?? '')));
                 $landing->faq_image = $filename;
+                if ($this->settingsColumnExists('contact_image')) {
+                    $contactFilename = $this->storeRemoteImage(
+                        trim((string) ($faq['source_url'] ?? '')),
+                        storage_path('app/public/admin-assets/images/contact/'),
+                        'contact'
+                    );
+                    if ($contactFilename) {
+                        $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/contact/' . (string) ($settings->contact_image ?? '')));
+                        $settings->contact_image = $contactFilename;
+                    }
+                }
             }
         }
 
@@ -1864,6 +1929,45 @@ class HatchersActionController extends Controller
             $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/testimonials/' . (string) ($testimonial->image ?? '')));
             $testimonial->image = $filename;
             $testimonial->save();
+        }
+    }
+
+    private function syncFeatureAssetsFromMedia(int $vendorId, array $mediaAssets): void
+    {
+        if (!$this->tableColumnExists('features', 'image')) {
+            return;
+        }
+
+        $assets = collect([
+            $this->findMediaTarget($mediaAssets, ['features', 'section_one', 'hero']),
+            $this->findMediaTarget($mediaAssets, ['why_choose_item', 'story', 'section_two']),
+            $this->findMediaTarget($mediaAssets, ['cta', 'section_three', 'faq']),
+        ])->filter(fn ($asset) => is_array($asset) && trim((string) ($asset['source_url'] ?? '')) !== '')->values();
+
+        if ($assets->isEmpty()) {
+            return;
+        }
+
+        $features = Features::where('vendor_id', $vendorId)->orderBy('id')->get();
+        foreach ($features as $index => $feature) {
+            $asset = $assets[$index % $assets->count()] ?? null;
+            if (!is_array($asset)) {
+                continue;
+            }
+
+            $filename = $this->storeRemoteImage(
+                trim((string) ($asset['source_url'] ?? '')),
+                storage_path('app/public/admin-assets/images/feature/'),
+                'feature'
+            );
+
+            if (!$filename) {
+                continue;
+            }
+
+            $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/feature/' . (string) ($feature->image ?? '')));
+            $feature->image = $filename;
+            $feature->save();
         }
     }
 

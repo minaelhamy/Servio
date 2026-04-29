@@ -19,6 +19,7 @@ use App\Models\Timing;
 use App\Models\CustomStatus;
 use App\Models\Tax;
 use App\Models\SubscriptionSettings;
+use App\Models\StorefrontAlias;
 use App\Models\Favorite;
 use App\Models\Bank;
 use App\Models\SocialLinks;
@@ -223,11 +224,11 @@ class helper
     public static function currentStoreUser($slug = null)
     {
         if (!empty($slug)) {
-            return self::vendor_data($slug);
+            return self::resolveVendorBySlug($slug);
         }
 
         if (self::isPlatformSubdomainRequest()) {
-            return self::vendor_data(self::tenantSubdomain());
+            return self::resolveVendorBySlug(self::tenantSubdomain());
         }
 
         if (self::isCustomDomainRequest()) {
@@ -249,7 +250,7 @@ class helper
             ?: request()->vendor
             ?: request()->vendor_slug;
 
-        return !empty($routeVendor) ? self::vendor_data($routeVendor) : null;
+        return !empty($routeVendor) ? self::resolveVendorBySlug($routeVendor) : null;
     }
 
     public static function storeinfo($slug = null)
@@ -774,139 +775,146 @@ class helper
     }
     public static function image_path($image)
     {
+        $image = trim((string) $image);
+        $assetBase = trim((string) env('ASSETPATHURL', 'storage/app/public/'), '/');
+        $placeholder = asset('storage/app/public/admin-assets/images/defaultimages/placeholder.png');
 
-        if ($image == "" && $image == null) {
-            $url = asset('storage/app/public/admin-assets/images/defaultimages/placeholder.png');
-        } else {
-            $url = asset('storage/app/public/admin-assets/images/defaultimages/placeholder.png');
+        if ($image === '') {
+            return $placeholder;
         }
+
+        if (Str::startsWith($image, ['http://', 'https://', '//'])) {
+            return $image;
+        }
+
+        $url = $placeholder;
         if (Str::contains($image, 'no-data')) {
             if (file_exists(storage_path('app/public/admin-assets/images/about/' . $image))) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/about/' . $image);
+                $url = url($assetBase . '/admin-assets/images/about/' . $image);
             }
         }
         if (Str::contains($image, 'profile')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/profile/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/profile/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/profile/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/profile/' . $image);
             }
         }
         if (Str::contains($image, 'category')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/categories/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/categories/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/categories/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/categories/' . $image);
             }
         }
         if (Str::contains($image, 'service')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/service/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/service/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/service/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/service/' . $image);
             }
         }
         if (Str::contains($image, 'product')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/product/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/product/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/product/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/product/' . $image);
             }
         }
         if (Str::contains($image, 'theme-')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/theme/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/theme/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/theme/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/theme/' . $image);
             }
         }
         if (Str::contains($image, 'feature-')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/feature/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/feature/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/feature/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/feature/' . $image);
             }
         }
         if (Str::contains($image, 'testimonial-')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/testimonials/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/testimonials/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/testimonials/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/testimonials/' . $image);
             }
         }
         if (Str::contains($image, 'payment')  || Str::contains($image, 'cod') || Str::contains($image, 'stripe') || Str::contains($image, 'paystack') || Str::contains($image, 'razorpay') || Str::contains($image, 'wallet') || Str::contains($image, 'flutterwave') || Str::contains($image, 'bank') || Str::contains($image, 'mercadopago') || Str::contains($image, 'paypal') || Str::contains($image, 'myfatoorah') || Str::contains($image, 'toyyibpay')  || Str::contains($image, 'phonepe') || Str::contains($image, 'paytab') || Str::contains($image, 'mollie') || Str::contains($image, 'khalti') || Str::contains($image, 'xendit') || Str::contains($image, 'payment')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/about/payment/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/about/payment/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/about/payment/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/about/payment/' . $image);
             }
         }
         if (Str::contains($image, 'screenshot')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/screenshot/'  . $image)) {
-                $url = url('storage/app/public/admin-assets/images/screenshot/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/screenshot/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/screenshot/' . $image);
             }
         }
         if (Str::contains($image, 'logo')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/about/logo/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/about/logo/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/about/logo/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/about/logo/' . $image);
             }
 
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/defaultimages/' . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/defaultimages/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/defaultimages/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/defaultimages/' . $image);
             }
         }
         if (Str::contains($image, 'favicon-')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/about/favicon/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/about/favicon/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/about/favicon/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/about/favicon/' . $image);
             }
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/defaultimages/' . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/defaultimages/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/defaultimages/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/defaultimages/' . $image);
             }
         }
         if (Str::contains($image, 'og_image')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/about/og_image/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/about/og_image/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/about/og_image/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/about/og_image/' . $image);
             }
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/defaultimages/' . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/defaultimages/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/defaultimages/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/defaultimages/' . $image);
             }
         }
         if (Str::contains($image, 'banner') || Str::contains($image, 'promotion')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/banner/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/banner/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/banner/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/banner/' . $image);
             }
         }
         if (Str::contains($image, 'blog')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/blog/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/blog/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/blog/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/blog/' . $image);
             }
         }
         if (Str::contains($image, 'flag')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/language/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/language/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/language/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/language/' . $image);
             }
         }
         if (Str::contains($image, 'cover')) {
 
-            $url = url(env('ASSETPATHURL') . 'admin-assets/images/coverimage/' . $image);
+            $url = url($assetBase . '/admin-assets/images/coverimage/' . $image);
         }
         if (Str::contains($image, 'gallery')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/gallery/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/gallery/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/gallery/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/gallery/' . $image);
             }
         }
         if (Str::contains($image, 'trusted_badge')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/about/trusted_badge/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/about/trusted_badge/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/about/trusted_badge/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/about/trusted_badge/' . $image);
             }
         }
         if (Str::contains($image, 'choose') || Str::contains($image, 'appsection') ||  Str::contains($image, 'subscription') ||  Str::contains($image, 'subscribe') || Str::contains($image, 'work') || Str::contains($image, 'faq') || Str::contains($image, 'order_success') || Str::contains($image, 'no_data') || Str::contains($image, 'maintenance') || Str::contains($image, 'store_unavailable') || Str::contains($image, 'auth')  || Str::contains($image, 'frame_logo') || Str::contains($image, 'referral')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/index/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/index/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/index/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/index/' . $image);
             }
         }
         if (Str::contains($image, 'contact')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/contact/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/contact/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/contact/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/contact/' . $image);
             }
         }
         if (Str::contains($image, 'auth')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/form/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/form/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/form/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/form/' . $image);
             }
         }
         if (Str::contains($image, 'additional_service')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/additional_service/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/additional_service/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/additional_service/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/additional_service/' . $image);
             }
         }
         if (Str::contains($image, 'login') || Str::contains($image, 'default') || Str::contains($image, 'home') || Str::contains($image, 'quick-call')) {
-            if (file_exists(env('ASSETPATHURL') . 'admin-assets/images/about/'  . $image)) {
-                $url = url(env('ASSETPATHURL') . 'admin-assets/images/about/' . $image);
+            if (file_exists(storage_path('app/public/admin-assets/images/about/' . $image))) {
+                $url = url($assetBase . '/admin-assets/images/about/' . $image);
             }
         }
         return $url;
@@ -1075,8 +1083,34 @@ class helper
     // front
     public static function vendor_data($slug)
     {
-        $vendordata = User::where('slug', $slug)->first();
-        return $vendordata;
+        return self::resolveVendorBySlug($slug);
+    }
+
+    private static function resolveVendorBySlug($slug)
+    {
+        $slug = trim((string) $slug);
+        if ($slug === '') {
+            return null;
+        }
+
+        $vendor = User::where('slug', $slug)->first();
+        if (!empty($vendor)) {
+            request()->attributes->remove('resolved_storefront_alias_slug');
+
+            return $vendor;
+        }
+
+        $alias = StorefrontAlias::where('slug', $slug)->first();
+        if (empty($alias)) {
+            return null;
+        }
+
+        $vendor = User::find($alias->vendor_id);
+        if (!empty($vendor)) {
+            request()->attributes->set('resolved_storefront_alias_slug', $slug);
+        }
+
+        return $vendor;
     }
     public static function service_count($category_id)
     {

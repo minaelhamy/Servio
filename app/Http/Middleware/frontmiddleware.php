@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\helper\helper;
 use App\Models\Settings;
+use Illuminate\Support\Str;
 
 class frontmiddleware
 {
@@ -19,10 +20,24 @@ class frontmiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $vendordata = helper::currentStoreUser($request->route('vendor'));
+        $requestedSlug = (string) ($request->route('vendor') ?: $request->route('vendor_slug') ?: '');
+        $vendordata = helper::currentStoreUser($requestedSlug);
 
         if (empty($vendordata)) {
             abort(404);
+        }
+
+        $aliasSlug = (string) $request->attributes->get('resolved_storefront_alias_slug', '');
+        if ($aliasSlug !== '' && helper::isPlatformHost() && $aliasSlug !== $vendordata->slug) {
+            $currentPath = trim($request->path(), '/');
+            $suffix = trim(Str::after($currentPath, trim($aliasSlug, '/')), '/');
+            $redirectUrl = helper::storefront_url($vendordata, $suffix);
+
+            if ($request->getQueryString()) {
+                $redirectUrl .= '?' . $request->getQueryString();
+            }
+
+            return redirect()->to($redirectUrl, 301);
         }
 
         date_default_timezone_set(@helper::appdata($vendordata->id)->timezone);
