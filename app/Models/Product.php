@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\helper\helper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class Product extends Model
     }
     public function multi_image()
     {
-        return $this->hasMany('App\Models\ProductImage', 'product_id', 'id')->select('product_images.id', 'product_images.product_id', 'product_images.image as image_name', DB::raw("CONCAT('" . url(env('ASSETPATHURL') . 'admin-assets/images/service') . "/', image) AS image"))->orderby('product_images.reorder_id');
+        return $this->hasMany('App\Models\ProductImage', 'product_id', 'id')->select('product_images.id', 'product_images.product_id', 'product_images.image as image_name', DB::raw("CONCAT('" . helper::assetUrl('admin-assets/images/service') . "/', image) AS image"))->orderby('product_images.reorder_id');
     }
     public function category_info()
     {
@@ -33,6 +34,6 @@ class Product extends Model
     }
     public function product_image_api()
     {
-        return $this->hasOne('App\Models\ProductImage', 'product_id', 'id')->select('product_images.id', 'product_images.product_id', 'product_images.image as image_name', DB::raw("CONCAT('" . url(env('ASSETPATHURL') . 'admin-assets/images/service') . "/', image) AS image"))->orderbyDesc('product_images.reorder_id');
+        return $this->hasOne('App\Models\ProductImage', 'product_id', 'id')->select('product_images.id', 'product_images.product_id', 'product_images.image as image_name', DB::raw("CONCAT('" . helper::assetUrl('admin-assets/images/service') . "/', image) AS image"))->orderbyDesc('product_images.reorder_id');
     }
 }

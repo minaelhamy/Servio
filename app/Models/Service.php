@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\helper\helper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class Service extends Model
     }
     public function multi_image()
     {
-        return $this->hasMany('App\Models\ServiceImage', 'service_id', 'id')->select('service_images.id', 'service_images.service_id', 'service_images.image as image_name', DB::raw("CONCAT('" . url(env('ASSETPATHURL') . 'admin-assets/images/service') . "/', image) AS image"))->orderby('service_images.reorder_id');
+        return $this->hasMany('App\Models\ServiceImage', 'service_id', 'id')->select('service_images.id', 'service_images.service_id', 'service_images.image as image_name', DB::raw("CONCAT('" . helper::assetUrl('admin-assets/images/service') . "/', image) AS image"))->orderby('service_images.reorder_id');
     }
     public function category_info()
     {
@@ -33,7 +34,7 @@ class Service extends Model
     }
     public function service_image_api()
     {
-        return $this->hasOne('App\Models\ServiceImage', 'service_id', 'id')->select('service_images.id', 'service_images.service_id', 'service_images.image as image_name', DB::raw("CONCAT('" . url(env('ASSETPATHURL') . 'admin-assets/images/service') . "/', image) AS image"))->orderbyDesc('service_images.reorder_id');
+        return $this->hasOne('App\Models\ServiceImage', 'service_id', 'id')->select('service_images.id', 'service_images.service_id', 'service_images.image as image_name', DB::raw("CONCAT('" . helper::assetUrl('admin-assets/images/service') . "/', image) AS image"))->orderbyDesc('service_images.reorder_id');
     }
      public function additional_service()
     {
