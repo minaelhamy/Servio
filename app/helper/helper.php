@@ -855,7 +855,7 @@ class helper
                 $url = url($assetBase . '/admin-assets/images/defaultimages/' . $image);
             }
         }
-        if (Str::contains($image, 'og_image')) {
+        if (Str::contains($image, 'og_image') || Str::contains($image, 'og-image')) {
             if (file_exists(storage_path('app/public/admin-assets/images/about/og_image/' . $image))) {
                 $url = url($assetBase . '/admin-assets/images/about/og_image/' . $image);
             }
@@ -863,7 +863,13 @@ class helper
                 $url = url($assetBase . '/admin-assets/images/defaultimages/' . $image);
             }
         }
-        if (Str::contains($image, 'banner') || Str::contains($image, 'promotion')) {
+        if (
+            Str::contains($image, 'banner') ||
+            Str::contains($image, 'promotion') ||
+            Str::contains($image, 'hero-') ||
+            Str::contains($image, 'landing-') ||
+            Str::contains($image, 'section-')
+        ) {
             if (file_exists(storage_path('app/public/admin-assets/images/banner/' . $image))) {
                 $url = url($assetBase . '/admin-assets/images/banner/' . $image);
             }

@@ -2064,7 +2064,11 @@ class HatchersActionController extends Controller
         }
 
         try {
-            $response = Http::timeout(20)->get($url);
+            $response = Http::withHeaders([
+                'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'User-Agent' => 'Mozilla/5.0 (compatible; HatchersBot/1.0; +https://app.hatchers.ai)',
+                'Referer' => config('app.url'),
+            ])->timeout(30)->retry(2, 250)->get($url);
         } catch (\Throwable $exception) {
             return null;
         }
@@ -2073,12 +2077,31 @@ class HatchersActionController extends Controller
             return null;
         }
 
+        $body = $response->body();
+        if (!$this->isValidRemoteImagePayload($body, (string) $response->header('Content-Type', ''))) {
+            return null;
+        }
+
         File::ensureDirectoryExists($directory);
         $extension = $this->detectRemoteImageExtension($url, (string) $response->header('Content-Type', ''));
         $filename = $prefix . '-' . uniqid() . '.' . $extension;
-        File::put(rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename, $response->body());
+        File::put(rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename, $body);
 
         return $filename;
+    }
+
+    private function isValidRemoteImagePayload(string $body, string $contentType): bool
+    {
+        if ($body === '') {
+            return false;
+        }
+
+        $contentType = strtolower(trim($contentType));
+        if ($contentType !== '' && str_starts_with($contentType, 'image/')) {
+            return @getimagesizefromstring($body) !== false;
+        }
+
+        return @getimagesizefromstring($body) !== false;
     }
 
     private function detectRemoteImageExtension(string $url, string $contentType): string
