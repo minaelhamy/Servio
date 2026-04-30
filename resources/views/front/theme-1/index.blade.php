@@ -105,18 +105,20 @@
                                 <div class="owl-item">
                                     <div class="card-top">
                                         <div class="card-overlay">
+                                            @php
+                                                $bannerCategory = $banner->category_info;
+                                                $bannerService = null;
+                                                if ($banner->type == 2 && !empty($banner->service_id)) {
+                                                    $bannerService = helper::servicedetails(
+                                                        $banner->service_id,
+                                                        $vendordata->id,
+                                                    );
+                                                }
+                                            @endphp
                                             @if ($banner->type == 1)
-                                                <a
-                                                    href="{{ URL::to($vendordata->slug . '/services?category=' . $banner['category_info']->slug) }}">
-                                                @elseif($banner->type == 2)
-                                                    @php
-                                                        $service = helper::servicedetails(
-                                                            $banner->service_id,
-                                                            $vendordata->id,
-                                                        );
-                                                    @endphp
-                                                    <a
-                                                        href="{{ URL::to(@$vendordata->slug . '/service-' . $service->slug) }}">
+                                                <a href="{{ !empty($bannerCategory?->slug) ? URL::to($vendordata->slug . '/services?category=' . $bannerCategory->slug) : 'javascript:void(0)' }}">
+                                            @elseif($banner->type == 2)
+                                                    <a href="{{ !empty($bannerService?->slug) ? URL::to($vendordata->slug . '/service-' . $bannerService->slug) : 'javascript:void(0)' }}">
                                                     @else
                                                         <a href="javascript:void(0)">
                                             @endif
@@ -341,15 +343,19 @@
             <div id="carouselExampleSlides1" class="owl-carousel owl-theme">
                 @foreach ($getbannersection2 as $key => $banner2)
                     <div class="item {{ $key == 0 ? 'active' : '' }}">
+                        @php
+                            $bannerTwoCategory = $banner2->category_info;
+                            $bannerTwoService = null;
+                            if ($banner2->type == 2 && !empty($banner2->service_id)) {
+                                $bannerTwoService = helper::servicedetails($banner2->service_id, $vendordata->id);
+                            }
+                        @endphp
                         @if ($banner2->type == 1)
                             <a class="cursor-pointer"
-                                href="{{ URL::to($vendordata->slug . '/services?category=' . $banner2['category_info']->slug) }}">
+                                href="{{ !empty($bannerTwoCategory?->slug) ? URL::to($vendordata->slug . '/services?category=' . $bannerTwoCategory->slug) : 'javascript:void(0)' }}">
                             @elseif($banner2->type == 2)
-                                @php
-                                    $service = helper::servicedetails($banner2->service_id, $vendordata->id);
-                                @endphp
                                 <a class="cursor-pointer"
-                                    href="{{ URL::to(@$vendordata->slug . '/service-' . $service->slug) }}">
+                                    href="{{ !empty($bannerTwoService?->slug) ? URL::to($vendordata->slug . '/service-' . $bannerTwoService->slug) : 'javascript:void(0)' }}">
                                 @else
                                     <a class="cursor-pointer" href="javascript:void(0)">
                         @endif
