@@ -39,6 +39,7 @@ use App\Http\Controllers\admin\POSController;
 use App\Http\Controllers\Integration\AtlasAssistantController;
 use App\Http\Controllers\Integration\HatchersLaunchController;
 use App\Models\ProductQuestionAnswer;
+use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,26 @@ use App\Models\ProductQuestionAnswer;
 
 Route::post('add-on/session/save', [AdminController::class, 'sessionsave']);
 Route::get('hatchers/launch', HatchersLaunchController::class);
+Route::get('/storage/{path}', function (string $path) {
+    $path = ltrim($path, '/');
+
+    if ($path === '' || Str::contains($path, ['../', '..\\'])) {
+        abort(404);
+    }
+
+    $publicPath = public_path('storage/' . $path);
+    if (is_file($publicPath)) {
+        return response()->file($publicPath);
+    }
+
+    $storagePath = storage_path('app/public/' . $path);
+    if (!is_file($storagePath)) {
+        abort(404);
+    }
+
+    return response()->file($storagePath);
+})->where('path', '.*');
+
 Route::group(['namespace' => 'admin', 'prefix' => 'admin'], function () {
     Route::get('/', [AdminController::class, 'login']);
     Route::post('/checklogin', [AdminController::class, 'check_admin_login']);
