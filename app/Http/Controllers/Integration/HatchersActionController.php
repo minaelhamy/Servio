@@ -1699,8 +1699,9 @@ class HatchersActionController extends Controller
             ->keyBy(fn (array $asset): string => trim((string) ($asset['target'] ?? '')));
 
         if ($hero = $targets->get('hero')) {
-            $filename = $this->storeRemoteImage(
-                trim((string) ($hero['source_url'] ?? '')),
+            $heroSource = trim((string) ($hero['source_url'] ?? ''));
+            $filename = $this->storeRemoteImageOrSource(
+                $heroSource,
                 storage_path('app/public/admin-assets/images/banner/'),
                 'hero'
             );
@@ -1708,8 +1709,8 @@ class HatchersActionController extends Controller
                 $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/banner/' . (string) ($settings->home_banner ?? '')));
                 $settings->home_banner = $filename;
                 if ($this->settingsColumnExists('og_image')) {
-                    $ogFilename = $this->storeRemoteImage(
-                        trim((string) ($hero['source_url'] ?? '')),
+                    $ogFilename = $this->storeRemoteImageOrSource(
+                        $heroSource,
                         storage_path('app/public/admin-assets/images/about/og_image/'),
                         'og-image'
                     );
@@ -1722,7 +1723,7 @@ class HatchersActionController extends Controller
         }
 
         if ($landingHero = $targets->get('landing')) {
-            $filename = $this->storeRemoteImage(
+            $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($landingHero['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/banner/'),
                 'landing'
@@ -1734,8 +1735,9 @@ class HatchersActionController extends Controller
         }
 
         if ($faq = $targets->get('faq')) {
-            $filename = $this->storeRemoteImage(
-                trim((string) ($faq['source_url'] ?? '')),
+            $faqSource = trim((string) ($faq['source_url'] ?? ''));
+            $filename = $this->storeRemoteImageOrSource(
+                $faqSource,
                 storage_path('app/public/admin-assets/images/index/'),
                 'faq'
             );
@@ -1743,8 +1745,8 @@ class HatchersActionController extends Controller
                 $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/index/' . (string) ($landing->faq_image ?? '')));
                 $landing->faq_image = $filename;
                 if ($this->settingsColumnExists('contact_image')) {
-                    $contactFilename = $this->storeRemoteImage(
-                        trim((string) ($faq['source_url'] ?? '')),
+                    $contactFilename = $this->storeRemoteImageOrSource(
+                        $faqSource,
                         storage_path('app/public/admin-assets/images/contact/'),
                         'contact'
                     );
@@ -1757,7 +1759,7 @@ class HatchersActionController extends Controller
         }
 
         if ($story = $targets->get('story')) {
-            $filename = $this->storeRemoteImage(
+            $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($story['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/index/'),
                 'why-choose'
@@ -1782,7 +1784,7 @@ class HatchersActionController extends Controller
             return;
         }
 
-        $filename = $this->storeRemoteImage(
+        $filename = $this->storeRemoteImageOrSource(
             trim((string) ($asset['source_url'] ?? '')),
             storage_path('app/public/admin-assets/images/banner/'),
             'section-' . $section
@@ -1830,7 +1832,7 @@ class HatchersActionController extends Controller
             return;
         }
 
-        $filename = $this->storeRemoteImage(
+        $filename = $this->storeRemoteImageOrSource(
             trim((string) ($asset['source_url'] ?? '')),
             storage_path('app/public/admin-assets/images/categories/'),
             'category'
@@ -1863,7 +1865,7 @@ class HatchersActionController extends Controller
         }
 
         foreach ($assets as $index => $asset) {
-            $filename = $this->storeRemoteImage(
+            $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($asset['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/service/'),
                 'service'
@@ -1925,7 +1927,7 @@ class HatchersActionController extends Controller
                 continue;
             }
 
-            $filename = $this->storeRemoteImage(
+            $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($asset['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/testimonials/'),
                 'testimonial'
@@ -1964,7 +1966,7 @@ class HatchersActionController extends Controller
                 continue;
             }
 
-            $filename = $this->storeRemoteImage(
+            $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($asset['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/feature/'),
                 'feature'
@@ -1989,7 +1991,7 @@ class HatchersActionController extends Controller
 
         $items = WhyChooseUs::where('vendor_id', $vendorId)->orderBy('reorder_id')->orderBy('id')->get();
         foreach ($items as $item) {
-            $filename = $this->storeRemoteImage(
+            $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($asset['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/index/'),
                 'choose'
@@ -2020,7 +2022,7 @@ class HatchersActionController extends Controller
         $existing = Gallery::where('vendor_id', $vendorId)->orderBy('reorder_id')->orderBy('id')->get();
         foreach ($assets as $index => $asset) {
             $gallery = $existing[$index] ?? new Gallery(['vendor_id' => $vendorId]);
-            $filename = $this->storeRemoteImage(
+            $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($asset['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/gallery/'),
                 'gallery'
@@ -2088,6 +2090,16 @@ class HatchersActionController extends Controller
         File::put(rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename, $body);
 
         return $filename;
+    }
+
+    private function storeRemoteImageOrSource(string $url, string $directory, string $prefix): ?string
+    {
+        $stored = $this->storeRemoteImage($url, $directory, $prefix);
+        if ($stored) {
+            return $stored;
+        }
+
+        return filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
     }
 
     private function isValidRemoteImagePayload(string $body, string $contentType): bool
