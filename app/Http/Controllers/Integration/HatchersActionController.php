@@ -111,7 +111,10 @@ class HatchersActionController extends Controller
         }
 
         $title = trim((string) ($payload['title'] ?? ''));
-        $mediaAssets = collect((array) ($payload['media_assets'] ?? []))->filter(fn ($item): bool => is_array($item))->values();
+        $incomingMediaAssets = collect((array) ($payload['media_assets'] ?? []))
+            ->filter(fn ($item): bool => is_array($item) && trim((string) ($item['source_url'] ?? '')) !== '')
+            ->values();
+        $mediaAssets = $incomingMediaAssets;
         if ($title === '') {
             $title = 'New service draft';
         }
@@ -211,6 +214,20 @@ class HatchersActionController extends Controller
             $mediaAssets->isEmpty()
         ) {
             return response()->json(['success' => false, 'error' => 'Website update needs a title, theme, or custom domain.'], 422);
+        }
+
+        if ($this->websiteBuildRequiresMedia($payload)) {
+            $generatedMediaAssets = collect($this->generateWebsiteMediaAssets($payload))
+                ->filter(fn ($item): bool => is_array($item) && trim((string) ($item['source_url'] ?? '')) !== '')
+                ->values();
+
+            if ($generatedMediaAssets->isNotEmpty()) {
+                $mediaAssets = $generatedMediaAssets;
+            }
+        }
+
+        if ($this->websiteBuildRequiresMedia($payload) && $mediaAssets->isEmpty()) {
+            return response()->json(['success' => false, 'error' => 'Website media could not be prepared yet.'], 422);
         }
 
         $settings = Settings::firstOrNew(['vendor_id' => $vendorId]);
@@ -2057,6 +2074,316 @@ class HatchersActionController extends Controller
         }
 
         return null;
+    }
+
+    private function websiteBuildRequiresMedia(array $payload): bool
+    {
+        return trim((string) ($payload['website_title'] ?? '')) !== ''
+            || trim((string) ($payload['hero_headline'] ?? '')) !== ''
+            || trim((string) ($payload['hero_subhead'] ?? '')) !== ''
+            || trim((string) ($payload['about_content'] ?? '')) !== ''
+            || !empty((array) ($payload['feature_items'] ?? []))
+            || !empty((array) ($payload['faq_items'] ?? []))
+            || !empty((array) ($payload['story_items'] ?? []))
+            || !empty((array) ($payload['testimonials'] ?? []));
+    }
+
+    private function generateWebsiteMediaAssets(array $payload): array
+    {
+        $resolved = [];
+        foreach ($this->websiteMediaQueryPlan($payload) as $slot) {
+            $slotKey = trim((string) ($slot['slot_key'] ?? ''));
+            if ($slotKey === '') {
+                continue;
+            }
+
+            $candidate = $this->resolveWebsiteMediaCandidate($slot);
+            if (!is_array($candidate) || trim((string) ($candidate['source_url'] ?? '')) === '') {
+                continue;
+            }
+
+            $resolved[$slotKey] = $candidate;
+        }
+
+        if ($resolved === []) {
+            return [];
+        }
+
+        $hero = $resolved['hero'] ?? ($resolved[array_key_first($resolved)] ?? null);
+        $features = $resolved['features'] ?? $hero;
+        $proof = $resolved['proof'] ?? $features ?? $hero;
+        $story = $resolved['story'] ?? $features ?? $hero;
+        $faq = $resolved['faq'] ?? $proof ?? $hero;
+        $action = $resolved['action'] ?? $proof ?? $hero;
+
+        return array_values(array_filter([
+            $this->slotMediaPayload('hero', 'hero banner', $hero),
+            $this->slotMediaPayload('landing', 'landing banner', $hero),
+            $this->slotMediaPayload('faq', 'faq image', $faq),
+            $this->slotMediaPayload('story', 'story image', $story),
+            $this->slotMediaPayload('section_one', 'section one banner', $features),
+            $this->slotMediaPayload('section_two', 'section two banner', $proof),
+            $this->slotMediaPayload('section_three', 'section three banner', $action),
+            $this->slotMediaPayload('category', 'category image', $features ?? $hero),
+            $this->slotMediaPayload('service_primary', 'service primary image', $hero ?? $features),
+            $this->slotMediaPayload('service_detail', 'service detail image', $features ?? $proof ?? $hero),
+            $this->slotMediaPayload('service_support', 'service support image', $action ?? $story ?? $hero),
+            $this->slotMediaPayload('testimonial_primary', 'testimonial image', $proof ?? $story ?? $hero),
+            $this->slotMediaPayload('gallery_primary', 'gallery image one', $story ?? $hero),
+            $this->slotMediaPayload('gallery_secondary', 'gallery image two', $features ?? $hero),
+            $this->slotMediaPayload('gallery_tertiary', 'gallery image three', $action ?? $proof ?? $hero),
+            $this->slotMediaPayload('why_choose_item', 'why choose us image', $story ?? $features ?? $hero),
+        ]));
+    }
+
+    private function websiteMediaQueryPlan(array $payload): array
+    {
+        $provided = collect((array) ($payload['media_queries'] ?? []))
+            ->filter(fn ($item): bool => is_array($item))
+            ->values()
+            ->all();
+
+        if ($provided !== []) {
+            return $provided;
+        }
+
+        $title = trim((string) ($payload['website_title'] ?? 'business'));
+        $headline = trim((string) ($payload['hero_headline'] ?? ''));
+        $featureTitle = trim((string) (collect((array) ($payload['feature_items'] ?? []))->pluck('title')->filter()->first() ?? ''));
+        $faqQuestion = trim((string) (collect((array) ($payload['faq_items'] ?? []))->pluck('question')->filter()->first() ?? ''));
+
+        return [
+            ['slot_key' => 'hero', 'query' => trim($title . ' service business storefront'), 'fallback_queries' => [trim($title . ' local service'), trim($headline)]],
+            ['slot_key' => 'features', 'query' => trim($title . ' professional service detail'), 'fallback_queries' => [trim($featureTitle), trim($title . ' quality service')]],
+            ['slot_key' => 'proof', 'query' => trim($title . ' happy customer'), 'fallback_queries' => [trim($title . ' client satisfaction')]],
+            ['slot_key' => 'story', 'query' => trim($title . ' small business owner'), 'fallback_queries' => [trim($title . ' founder portrait')]],
+            ['slot_key' => 'faq', 'query' => trim($title . ' helpful support'), 'fallback_queries' => [trim($faqQuestion), trim($title . ' consultation')]],
+            ['slot_key' => 'action', 'query' => trim($title . ' booking appointment action'), 'fallback_queries' => [trim($title . ' contact booking')]],
+        ];
+    }
+
+    private function resolveWebsiteMediaCandidate(array $slot): ?array
+    {
+        $queries = $this->slotQueries($slot);
+        if ($queries === []) {
+            return null;
+        }
+
+        $assets = [];
+        foreach ($queries as $query) {
+            foreach ([
+                $this->searchWikimediaAssets($query),
+                $this->searchUnsplashAssets($query),
+                $this->searchPexelsAssets($query),
+                $this->searchPixabayAssets($query),
+            ] as $providerAssets) {
+                if (!empty($providerAssets)) {
+                    $assets = array_merge($assets, $providerAssets);
+                }
+            }
+
+            if ($assets !== []) {
+                break;
+            }
+        }
+
+        $assets = collect($assets)
+            ->filter(fn ($asset): bool => is_array($asset) && trim((string) ($asset['source_url'] ?? '')) !== '')
+            ->unique(fn (array $asset): string => trim((string) ($asset['source_url'] ?? '')))
+            ->values();
+
+        return $assets->first() ?: null;
+    }
+
+    private function slotQueries(array $slot): array
+    {
+        $queries = [];
+        foreach (array_merge(
+            [trim((string) ($slot['query'] ?? ''))],
+            array_map(fn ($item) => trim((string) $item), (array) ($slot['fallback_queries'] ?? []))
+        ) as $query) {
+            if ($query !== '') {
+                $queries[] = preg_replace('/\s+/', ' ', $query) ?: $query;
+            }
+        }
+
+        return array_values(array_unique($queries));
+    }
+
+    private function slotMediaPayload(string $target, string $label, ?array $asset): ?array
+    {
+        if (!is_array($asset) || trim((string) ($asset['source_url'] ?? '')) === '') {
+            return null;
+        }
+
+        return [
+            'target' => $target,
+            'label' => $label,
+            'source_url' => trim((string) ($asset['source_url'] ?? '')),
+            'preview_url' => trim((string) ($asset['preview_url'] ?? $asset['source_url'] ?? '')),
+            'alt_text' => trim((string) ($asset['alt_text'] ?? $label)),
+            'credit_name' => trim((string) ($asset['credit_name'] ?? '')),
+            'credit_url' => trim((string) ($asset['credit_url'] ?? '')),
+            'provider' => trim((string) ($asset['provider'] ?? 'wikimedia')),
+        ];
+    }
+
+    private function searchUnsplashAssets(string $query): array
+    {
+        $key = trim((string) config('services.stock_media.unsplash_access_key', ''));
+        if ($key === '') {
+            return [];
+        }
+
+        try {
+            $response = Http::timeout(20)->withHeaders([
+                'Authorization' => 'Client-ID ' . $key,
+                'Accept-Version' => 'v1',
+            ])->get('https://api.unsplash.com/search/photos', [
+                'query' => $query,
+                'per_page' => 6,
+                'orientation' => 'landscape',
+                'content_filter' => 'high',
+                'order_by' => 'relevant',
+            ]);
+        } catch (\Throwable $exception) {
+            return [];
+        }
+
+        $results = (array) ($response->json('results') ?? []);
+
+        return collect($results)->map(function (array $item): ?array {
+            $url = trim((string) ($item['urls']['regular'] ?? ''));
+            if ($url === '') {
+                return null;
+            }
+
+            return [
+                'provider' => 'unsplash',
+                'source_url' => $url,
+                'preview_url' => trim((string) ($item['urls']['small'] ?? $url)),
+                'alt_text' => trim((string) ($item['alt_description'] ?? 'Website image')),
+                'credit_name' => trim((string) ($item['user']['name'] ?? '')),
+                'credit_url' => trim((string) ($item['user']['links']['html'] ?? '')),
+            ];
+        })->filter()->values()->all();
+    }
+
+    private function searchPexelsAssets(string $query): array
+    {
+        $key = trim((string) config('services.stock_media.pexels_api_key', ''));
+        if ($key === '') {
+            return [];
+        }
+
+        try {
+            $response = Http::timeout(20)->withHeaders([
+                'Authorization' => $key,
+            ])->get('https://api.pexels.com/v1/search', [
+                'query' => $query,
+                'per_page' => 6,
+                'orientation' => 'landscape',
+            ]);
+        } catch (\Throwable $exception) {
+            return [];
+        }
+
+        $results = (array) ($response->json('photos') ?? []);
+
+        return collect($results)->map(function (array $item): ?array {
+            $url = trim((string) ($item['src']['large2x'] ?? ''));
+            if ($url === '') {
+                return null;
+            }
+
+            return [
+                'provider' => 'pexels',
+                'source_url' => $url,
+                'preview_url' => trim((string) ($item['src']['medium'] ?? $url)),
+                'alt_text' => trim((string) ($item['alt'] ?? 'Website image')),
+                'credit_name' => trim((string) ($item['photographer'] ?? '')),
+                'credit_url' => trim((string) ($item['url'] ?? '')),
+            ];
+        })->filter()->values()->all();
+    }
+
+    private function searchPixabayAssets(string $query): array
+    {
+        $key = trim((string) config('services.stock_media.pixabay_api_key', ''));
+        if ($key === '') {
+            return [];
+        }
+
+        try {
+            $response = Http::timeout(20)->get('https://pixabay.com/api/', [
+                'key' => $key,
+                'q' => $query,
+                'image_type' => 'photo',
+                'safesearch' => 'true',
+                'order' => 'popular',
+                'per_page' => 6,
+            ]);
+        } catch (\Throwable $exception) {
+            return [];
+        }
+
+        $results = (array) ($response->json('hits') ?? []);
+
+        return collect($results)->map(function (array $item): ?array {
+            $url = trim((string) ($item['largeImageURL'] ?? ''));
+            if ($url === '') {
+                return null;
+            }
+
+            return [
+                'provider' => 'pixabay',
+                'source_url' => $url,
+                'preview_url' => trim((string) ($item['webformatURL'] ?? $url)),
+                'alt_text' => trim((string) ($item['tags'] ?? 'Website image')),
+                'credit_name' => trim((string) ($item['user'] ?? '')),
+                'credit_url' => trim((string) ($item['pageURL'] ?? '')),
+            ];
+        })->filter()->values()->all();
+    }
+
+    private function searchWikimediaAssets(string $query): array
+    {
+        try {
+            $response = Http::timeout(20)->get('https://commons.wikimedia.org/w/api.php', [
+                'action' => 'query',
+                'generator' => 'search',
+                'gsrsearch' => $query,
+                'gsrnamespace' => 6,
+                'gsrlimit' => 6,
+                'prop' => 'imageinfo',
+                'iiprop' => 'url|size|user',
+                'iiurlwidth' => 1200,
+                'format' => 'json',
+                'formatversion' => 2,
+                'origin' => '*',
+            ]);
+        } catch (\Throwable $exception) {
+            return [];
+        }
+
+        $results = (array) ($response->json('query.pages') ?? []);
+
+        return collect($results)->map(function (array $item): ?array {
+            $info = is_array($item['imageinfo'][0] ?? null) ? $item['imageinfo'][0] : [];
+            $url = trim((string) ($info['thumburl'] ?? $info['url'] ?? ''));
+            if ($url === '') {
+                return null;
+            }
+
+            return [
+                'provider' => 'wikimedia',
+                'source_url' => $url,
+                'preview_url' => $url,
+                'alt_text' => trim((string) preg_replace('/^File:/i', '', (string) ($item['title'] ?? 'Website image'))),
+                'credit_name' => trim((string) ($info['user'] ?? 'Wikimedia Commons')),
+                'credit_url' => trim((string) ($info['descriptionurl'] ?? $url)),
+            ];
+        })->filter()->values()->all();
     }
 
     private function storeRemoteImage(string $url, string $directory, string $prefix): ?string
