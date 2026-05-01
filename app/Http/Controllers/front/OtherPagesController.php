@@ -90,10 +90,9 @@ class OtherPagesController extends Controller
     }
     public function gallery(Request $request)
     {
-        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
-        $allgallery = Gallery::where('vendor_id', $vendordata->id)->orderBy('reorder_id')->get();
-        $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderByDesc('reorder_id')->take(5)->get();
-        return view('front.gallery.gallery', compact('vendordata','vdata', 'allgallery', 'reviewimage'));
+        [$vendordata] = $this->resolveStorefrontVendor($request);
+
+        return redirect()->to(URL::to($vendordata->slug));
     }
     public function faq(Request $request)
     {

@@ -467,7 +467,6 @@ class HatchersActionController extends Controller
             $this->syncFeatureAssetsFromMedia($vendorId, $mediaAssets->all());
             $this->syncTestimonialAssetsFromMedia($vendorId, $mediaAssets->all());
             $this->syncWhyChooseAssetsFromMedia($vendorId, $mediaAssets->all());
-            $this->syncGalleryAssetsFromMedia($vendorId, $mediaAssets->all());
         }
 
         $this->snapshotService->syncFounder($user, 'service_setup');
@@ -524,6 +523,15 @@ class HatchersActionController extends Controller
         $blog->description = trim((string) ($payload['description'] ?? 'Created from Hatchers OS by Atlas.'));
         $blog->image = '';
         $blog->save();
+
+        $mediaAssets = collect((array) ($payload['media_assets'] ?? []))
+            ->filter(fn ($item): bool => is_array($item) && trim((string) ($item['source_url'] ?? '')) !== '')
+            ->values()
+            ->all();
+
+        if ($mediaAssets !== []) {
+            $this->syncBlogImageFromMedia($blog, $mediaAssets);
+        }
 
         $this->snapshotService->syncFounder($user, 'os_blog_created');
 
@@ -2136,6 +2144,32 @@ class HatchersActionController extends Controller
             $item->image = $filename;
             $item->save();
         }
+    }
+
+    private function syncBlogImageFromMedia(Blog $blog, array $mediaAssets): void
+    {
+        if (!$this->tableColumnExists('blogs', 'image')) {
+            return;
+        }
+
+        $asset = $this->findMediaTarget($mediaAssets, ['blog_primary', 'hero', 'story', 'section_one', 'section_two']);
+        if (!is_array($asset) || trim((string) ($asset['source_url'] ?? '')) === '') {
+            return;
+        }
+
+        $filename = $this->storeRemoteImageOrSource(
+            trim((string) ($asset['source_url'] ?? '')),
+            storage_path('app/public/admin-assets/images/blog/'),
+            'blog'
+        );
+
+        if (!$filename) {
+            return;
+        }
+
+        $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/blog/' . (string) ($blog->image ?? '')));
+        $blog->image = $filename;
+        $blog->save();
     }
 
     private function syncGalleryAssetsFromMedia(int $vendorId, array $mediaAssets): void

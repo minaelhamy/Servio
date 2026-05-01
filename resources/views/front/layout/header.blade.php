@@ -184,10 +184,6 @@
                     @endif
                 @endif
                 <li class="nav-item">
-                    <a class="nav-link navbar-text {{ request()->is($vendordata->slug . '/gallery') ? 'active' : '' }}"
-                        href="{{ URL::to($vendordata->slug . '/gallery') }}">{{ trans('labels.gallery') }}</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link navbar-text {{ request()->is($vendordata->slug . '/contact') ? 'active' : '' }}"
                         href="{{ URL::to($vendordata->slug . '/contact') }}">{{ trans('labels.help_contact') }}</a>
                 </li>
