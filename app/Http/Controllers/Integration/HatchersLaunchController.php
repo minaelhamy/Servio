@@ -10,6 +10,7 @@ use App\Models\SubscriptionSettings;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Throwable;
 
 class HatchersLaunchController extends Controller
@@ -17,7 +18,10 @@ class HatchersLaunchController extends Controller
     public function __invoke(Request $request)
     {
         try {
-            $sharedSecret = trim((string) env('WEBSITE_PLATFORM_SHARED_SECRET', env('HATCHERS_SHARED_SECRET', '')));
+            Config::set('session.same_site', 'none');
+            Config::set('session.secure', true);
+
+            $sharedSecret = trim((string) config('services.os.shared_secret', ''));
             if ($sharedSecret === '') {
                 abort(500, 'WEBSITE_PLATFORM_SHARED_SECRET is not configured.');
             }
@@ -74,8 +78,11 @@ class HatchersLaunchController extends Controller
                 $this->ensureFounderWorkspaceDefaults($user);
             }
 
-            session()->put('admin_login', 1);
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            $request->session()->put('admin_login', 1);
             Auth::login($user, true);
+            $request->session()->regenerate();
 
             $target = (string) $payload['target'];
             if ($target === '' || str_starts_with($target, 'http')) {
