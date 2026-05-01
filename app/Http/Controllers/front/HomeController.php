@@ -17,6 +17,8 @@ use DB;
 
 class HomeController extends Controller
 {
+    private const FALLBACK_THEME = 1;
+
     public function maintanance()
     {
         return view('front.maintenance');
@@ -42,10 +44,12 @@ class HomeController extends Controller
         $getcategories = Category::where('is_available', "1")->where('is_deleted', "2")->orderBY('reorder_id')->where('vendor_id', @$vendordata->id);
         $testimonials = Testimonials::where('vendor_id', @$vendordata->id)->where('user_id', null)->where('service_id', null)->orderBy('reorder_id')->get();
         $choose = WhyChooseUs::where('vendor_id', $vendordata->id)->where('reorder_id')->get();
-        if (helper::appdata(@$vendordata->id)->theme == 3) {
+        $themeId = $this->resolvedThemeId((int) $vendordata->id);
+
+        if ($themeId == 3) {
             $getcategories = $getcategories->take(6)->get();
             $getblog = $getblog->take(4)->get();
-        } elseif (helper::appdata(@$vendordata->id)->theme == 4) {
+        } elseif ($themeId == 4) {
             $getcategories = $getcategories->get();
             $getblog = $getblog->take(4)->get();
         } else {
@@ -65,7 +69,7 @@ class HomeController extends Controller
             ->take(12)
             ->get();
 
-        if (helper::appdata(@$vendordata->id)->theme == 4) {
+        if ($themeId == 4) {
             $gettoprated = Service::with('service_image', 'multi_image', 'reviews')
                 ->select('services.*', DB::raw('ROUND(AVG(testimonials.star),1) as ratings_average'))
                 ->leftJoin('testimonials', 'testimonials.service_id', '=', 'services.id')
@@ -92,9 +96,22 @@ class HomeController extends Controller
         if (helper::storefront_request_is('pwa')) {
             return view('front.themepwa', compact('getbannersection1', 'getbannersection2', 'getbannersection3', 'getblog', 'getcategories', 'getservices', 'gettoprated', 'vendordata','vdata', 'testimonials', 'choose', 'app_section', 'reviewimage'));
         } else {
-            return view('front.theme-' . helper::appdata(@$vendordata->id)->theme . '.index', compact('getbannersection1', 'getbannersection2', 'getbannersection3', 'getblog', 'getcategories', 'getservices', 'gettoprated', 'vendordata','vdata', 'testimonials', 'choose', 'app_section', 'reviewimage'));
+            return view('front.theme-' . $themeId . '.index', compact('getbannersection1', 'getbannersection2', 'getbannersection3', 'getblog', 'getcategories', 'getservices', 'gettoprated', 'vendordata','vdata', 'testimonials', 'choose', 'app_section', 'reviewimage'));
         }
     }
+
+    private function resolvedThemeId(int $vendorId): int
+    {
+        $rawTheme = helper::appdata($vendorId)->theme ?? self::FALLBACK_THEME;
+        $themeId = (int) $rawTheme;
+
+        if ($themeId <= 0 || !view()->exists('front.theme-' . $themeId . '.index')) {
+            return self::FALLBACK_THEME;
+        }
+
+        return $themeId;
+    }
+
     public function direction(Request $request)
     {
         session()->put('direction', $request->btndirection);

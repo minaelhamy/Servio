@@ -31,6 +31,8 @@ use Lunaweb\RecaptchaV3\Facades\RecaptchaV3;
 
 class HomeController extends Controller
 {
+    private const FALLBACK_THEME = 1;
+
     public function index(Request $request)
     {
         // if the current host contains the website domain
@@ -70,10 +72,12 @@ class HomeController extends Controller
             $getcategories = Category::where('is_available', "1")->where('is_deleted', "2")->orderBY('reorder_id')->where('vendor_id', @$vendordata->id);
             $testimonials = Testimonials::where('vendor_id', @$vendordata->id)->where('user_id', null)->where('service_id', null)->where('reorder_id')->get();
             $choose = WhyChooseUs::where('vendor_id', $vendordata->id)->where('reorder_id')->get();
-            if (helper::appdata(@$vendordata->id)->theme == 3) {
+            $themeId = $this->resolvedThemeId((int) $vendordata->id);
+
+            if ($themeId == 3) {
                 $getcategories = $getcategories->take(6)->get();
                 $getblog = $getblog->take(4)->get();
-            } elseif (helper::appdata(@$vendordata->id)->theme == 4) {
+            } elseif ($themeId == 4) {
                 $getcategories = $getcategories->get();
                 $getblog = $getblog->take(4)->get();
             } else {
@@ -93,7 +97,7 @@ class HomeController extends Controller
                 ->take(12)
                 ->get();
 
-            if (helper::appdata(@$vendordata->id)->theme == 4) {
+            if ($themeId == 4) {
                 $gettoprated = Service::with('service_image', 'reviews')
                     ->select('services.*', DB::raw('ROUND(AVG(testimonials.star),1) as ratings_average'))
                     ->leftJoin('testimonials', 'testimonials.service_id', '=', 'services.id')
@@ -117,9 +121,22 @@ class HomeController extends Controller
                     ->get();
             }
             $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderBy('reorder_id')->take(5)->get();
-            return view('front.theme-' . helper::appdata(@$vendordata->id)->theme . '.index', compact('getbannersection1', 'getbannersection2', 'getbannersection3', 'getblog', 'getcategories', 'getservices', 'gettoprated', 'vendordata', 'testimonials', 'choose', 'app_section', 'reviewimage'));
+            return view('front.theme-' . $themeId . '.index', compact('getbannersection1', 'getbannersection2', 'getbannersection3', 'getblog', 'getcategories', 'getservices', 'gettoprated', 'vendordata', 'testimonials', 'choose', 'app_section', 'reviewimage'));
         }
     }
+
+    private function resolvedThemeId(int $vendorId): int
+    {
+        $rawTheme = helper::appdata($vendorId)->theme ?? self::FALLBACK_THEME;
+        $themeId = (int) $rawTheme;
+
+        if ($themeId <= 0 || !view()->exists('front.theme-' . $themeId . '.index')) {
+            return self::FALLBACK_THEME;
+        }
+
+        return $themeId;
+    }
+
     public function emailsubscribe(Request $request)
     {
         $newsubscriber = new Subscriber();
