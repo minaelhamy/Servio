@@ -66,6 +66,13 @@ Route::get('/storage/{path}', function (string $path) {
         abort(404);
     }
 
+    $path = str_replace('\\', '/', $path);
+    if (Str::startsWith($path, 'storage/app/public/')) {
+        $path = Str::after($path, 'storage/app/public/');
+    } elseif (Str::startsWith($path, 'app/public/')) {
+        $path = Str::after($path, 'app/public/');
+    }
+
     $publicPath = public_path('storage/' . $path);
     if (is_file($publicPath)) {
         return response()->file($publicPath, $headers);
@@ -78,6 +85,39 @@ Route::get('/storage/{path}', function (string $path) {
 
     return response()->file($storagePath, $headers);
 })->where('path', '.*');
+
+Route::get('/{assetRoot}/{path}', function (string $assetRoot, string $path) {
+    $assetRoot = trim($assetRoot, '/');
+    $path = ltrim($path, '/');
+
+    $headers = [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+        'Access-Control-Allow-Headers' => 'Origin, Content-Type, Accept',
+        'Cross-Origin-Resource-Policy' => 'cross-origin',
+    ];
+
+    if ($assetRoot === '' || $path === '' || Str::contains($assetRoot . '/' . $path, ['../', '..\\'])) {
+        abort(404);
+    }
+
+    $allowedRoots = ['admin-assets', 'front', 'landing', 'widget_asstes', 'installer'];
+    if (!in_array($assetRoot, $allowedRoots, true)) {
+        abort(404);
+    }
+
+    $publicPath = public_path($assetRoot . '/' . $path);
+    if (is_file($publicPath)) {
+        return response()->file($publicPath, $headers);
+    }
+
+    $storagePath = storage_path('app/public/' . $assetRoot . '/' . $path);
+    if (!is_file($storagePath)) {
+        abort(404);
+    }
+
+    return response()->file($storagePath, $headers);
+})->where('assetRoot', 'admin-assets|front|landing|widget_asstes|installer')->where('path', '.*');
 
 Route::group(['namespace' => 'admin', 'prefix' => 'admin'], function () {
     Route::get('/', [AdminController::class, 'login']);
