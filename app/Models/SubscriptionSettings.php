@@ -6,5 +6,6 @@ class SubscriptionSettings extends Model
 {
     use HasFactory;
     protected $table = 'subscription_settings';
+    protected $guarded = [];
 }
 
