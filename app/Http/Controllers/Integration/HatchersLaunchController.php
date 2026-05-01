@@ -72,6 +72,12 @@ class HatchersLaunchController extends Controller
             $target = '/admin/dashboard';
         }
 
+        // Fresh founder workspaces can still have partially warmed dashboard metrics.
+        // Land them on a simpler settings page first so Servio opens reliably from the OS.
+        if ((int) ($user->type ?? 0) === 2 && $target === '/admin/dashboard') {
+            $target = '/admin/basic_settings';
+        }
+
         return redirect($target);
     }
 }
