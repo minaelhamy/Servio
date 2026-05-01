@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\File;
 use Throwable;
 
 class HatchersLaunchController extends Controller
@@ -177,6 +178,12 @@ class HatchersLaunchController extends Controller
 
     private function logLaunch(string $stage, array $context = []): void
     {
-        error_log('[HatchersLaunch][' . $stage . '] ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        $line = '[HatchersLaunch][' . $stage . '] ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        error_log($line);
+
+        try {
+            File::append(storage_path('logs/hatchers-launch.log'), '[' . now()->toDateTimeString() . '] ' . $line . PHP_EOL);
+        } catch (Throwable) {
+        }
     }
 }
