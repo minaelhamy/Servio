@@ -51,9 +51,39 @@ use Illuminate\Support\Str;
 |
 */
 
+$storefrontAssetHeaders = static function (string $absolutePath, array $headers = []): array {
+    $extension = strtolower((string) pathinfo($absolutePath, PATHINFO_EXTENSION));
+
+    $mimeTypes = [
+        'css' => 'text/css; charset=UTF-8',
+        'js' => 'application/javascript; charset=UTF-8',
+        'mjs' => 'application/javascript; charset=UTF-8',
+        'json' => 'application/json; charset=UTF-8',
+        'map' => 'application/json; charset=UTF-8',
+        'svg' => 'image/svg+xml',
+        'png' => 'image/png',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        'ico' => 'image/x-icon',
+        'woff' => 'font/woff',
+        'woff2' => 'font/woff2',
+        'ttf' => 'font/ttf',
+        'otf' => 'font/otf',
+        'eot' => 'application/vnd.ms-fontobject',
+    ];
+
+    if (isset($mimeTypes[$extension])) {
+        $headers['Content-Type'] = $mimeTypes[$extension];
+    }
+
+    return $headers;
+};
+
 Route::post('add-on/session/save', [AdminController::class, 'sessionsave']);
 Route::get('hatchers/launch', HatchersLaunchController::class);
-Route::get('/storage/{path}', function (string $path) {
+Route::get('/storage/{path}', function (string $path) use ($storefrontAssetHeaders) {
     $path = ltrim($path, '/');
     $headers = [
         'Access-Control-Allow-Origin' => '*',
@@ -75,7 +105,7 @@ Route::get('/storage/{path}', function (string $path) {
 
     $publicPath = public_path('storage/' . $path);
     if (is_file($publicPath)) {
-        return response()->file($publicPath, $headers);
+        return response()->file($publicPath, $storefrontAssetHeaders($publicPath, $headers));
     }
 
     $storagePath = storage_path('app/public/' . $path);
@@ -83,10 +113,10 @@ Route::get('/storage/{path}', function (string $path) {
         abort(404);
     }
 
-    return response()->file($storagePath, $headers);
+    return response()->file($storagePath, $storefrontAssetHeaders($storagePath, $headers));
 })->where('path', '.*');
 
-Route::get('/{assetRoot}/{path}', function (string $assetRoot, string $path) {
+Route::get('/{assetRoot}/{path}', function (string $assetRoot, string $path) use ($storefrontAssetHeaders) {
     $assetRoot = trim($assetRoot, '/');
     $path = ltrim($path, '/');
 
@@ -108,7 +138,7 @@ Route::get('/{assetRoot}/{path}', function (string $assetRoot, string $path) {
 
     $publicPath = public_path($assetRoot . '/' . $path);
     if (is_file($publicPath)) {
-        return response()->file($publicPath, $headers);
+        return response()->file($publicPath, $storefrontAssetHeaders($publicPath, $headers));
     }
 
     $storagePath = storage_path('app/public/' . $assetRoot . '/' . $path);
@@ -116,7 +146,7 @@ Route::get('/{assetRoot}/{path}', function (string $assetRoot, string $path) {
         abort(404);
     }
 
-    return response()->file($storagePath, $headers);
+    return response()->file($storagePath, $storefrontAssetHeaders($storagePath, $headers));
 })->where('assetRoot', 'admin-assets|front|landing|widget_asstes|installer')->where('path', '.*');
 
 Route::group(['namespace' => 'admin', 'prefix' => 'admin'], function () {
