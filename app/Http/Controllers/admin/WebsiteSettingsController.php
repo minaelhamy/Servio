@@ -26,15 +26,36 @@ class WebsiteSettingsController extends Controller
         } else {
             $vendor_id = Auth::user()->id;
         }
-        $settingdata =  Settings::where('vendor_id', $vendor_id)->first();
+        $settingdata = Settings::firstOrNew(['vendor_id' => $vendor_id]);
+        $settingdata->vendor_id = $vendor_id;
         $theme = Transaction::select('themes_id', 'plan_id')->where('vendor_id', $vendor_id)->orderByDesc('id')->first();
         $currentPlan = PricingPlan::select('id', 'themes_id')->where('id', Auth::user()->plan_id)->first();
-        $appsettings = AppSettings::where('vendor_id', $vendor_id)->first();
+        $appsettings = AppSettings::firstOrNew(['vendor_id' => $vendor_id]);
+        $appsettings->vendor_id = $vendor_id;
         $getfooterfeatures = Footerfeatures::where('vendor_id', $vendor_id)->get();
         $getsociallinks = SocialLinks::where('vendor_id', $vendor_id)->get();
-        $subscription = SubscriptionSettings::where('vendor_id', $vendor_id)->first();
+        $subscription = SubscriptionSettings::firstOrNew(['vendor_id' => $vendor_id]);
+        $subscription->vendor_id = $vendor_id;
         $funfacts = FunFact::where('vendor_id', $vendor_id)->get();
-        $landingdata = LandingSettings::where('vendor_id', $vendor_id)->first();
+        $landingdata = LandingSettings::firstOrNew(['vendor_id' => $vendor_id]);
+        $landingdata->vendor_id = $vendor_id;
+
+        if (blank($settingdata->theme)) {
+            $settingdata->theme = 1;
+        }
+        if (blank($settingdata->primary_color)) {
+            $settingdata->primary_color = '#111827';
+        }
+        if (blank($settingdata->secondary_color)) {
+            $settingdata->secondary_color = '#f59e0b';
+        }
+        if (blank($landingdata->primary_color)) {
+            $landingdata->primary_color = '#111827';
+        }
+        if (blank($landingdata->secondary_color)) {
+            $landingdata->secondary_color = '#f59e0b';
+        }
+
         return view('admin.basic_settings.index', compact('settingdata', 'theme', 'currentPlan', 'appsettings', 'getfooterfeatures', 'subscription', 'getsociallinks', 'funfacts', 'landingdata'));
     }
     public function save(Request $request)
