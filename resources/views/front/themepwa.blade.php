@@ -10,9 +10,9 @@
         href="{{ helper::image_path(helper::appdata(@$vendordata->id)->favicon) }}">
     <!-- Favicon icon -->
 
-    <link rel="stylesheet" href="{{ helper::assetUrl('landing/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('landing/css/style.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('landing/css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'landing/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'landing/css/style.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'landing/css/responsive.css') }}">
     <style>
         :root {
             /* Color */
@@ -74,8 +74,8 @@
             </div>
         </div>
     </section>
-    <script src="{{ helper::assetUrl('admin-assets/js/jquery/jquery.min.js') }}"></script><!-- jQuery JS -->
-    <script src="{{ helper::assetUrl('admin-assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script><!-- Bootstrap JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/jquery/jquery.min.js') }}"></script><!-- jQuery JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script><!-- Bootstrap JS -->
 </body>
 
 </html>

@@ -23,14 +23,14 @@
     <link rel="icon" type="image" sizes="16x16"
         href="{{ helper::image_path(helper::appdata($vendordata->id)->favicon) }}"><!-- Favicon icon -->
     <!-- Favicon icon -->
-    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/bootstrap/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/bootstrap/bootstrap.min.css') }}">
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/webfonts/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/fontawesome/all.min.css') }}">
     <!-- FontAwesome CSS -->
-    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/toastr/toastr.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/toastr/toastr.min.css') }}">
     <!-- FontAwesome CSS -->
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/style.css') }}" />
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/responsive.css') }}">
     <!-- Responsive CSS -->
     <!-- IF VERSION 2  -->
     @if (helper::appdata('')->recaptcha_version == 'v2')
@@ -53,9 +53,9 @@
     <main>
         @yield('content')
     </main>
-    <script src="{{ helper::assetUrl('front/js/jquery/jquery.min.js') }}"></script>
-    <script src="{{ helper::assetUrl('front/js/bootstrap/bootstrap.bundle.js') }}"></script>
-    <script src="{{ helper::assetUrl('admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/bootstrap/bootstrap.bundle.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
     <script>
         
 

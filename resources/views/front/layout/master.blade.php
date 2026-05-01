@@ -31,25 +31,25 @@
     @endif
 
 
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/bootstrap/bootstrap.min.css') }}" />
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/bootstrap/bootstrap-select.min.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/webfonts/css/all.min.css') }}" />
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/glightbox.css') }}"><!-- glightbox css -->
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/bootstrap/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/bootstrap/bootstrap-select.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/webfonts/css/all.min.css') }}" />
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/glightbox.css') }}"><!-- glightbox css -->
 
     {{-- google fonts --}}
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/font.css') }}" />
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/font.css') }}" />
     {{-- google fonts --}}
-    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/sweetalert/sweetalert2.min.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/owl-carousel/owl.carousel.min.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/owl-carousel/owl.theme.default.min.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/calander/fullcalendar.min.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/toastr/toastr.min.css') }}">
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/style.css') }}" />
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/sweetalert/sweetalert2.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/owl-carousel/owl.carousel.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/owl-carousel/owl.theme.default.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/calander/fullcalendar.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/toastr/toastr.min.css') }}">
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/responsive.css') }}">
     <link rel="stylesheet"
-        href="{{ helper::assetUrl('admin-assets/css/datatables/dataTables.bootstrap5.min.css') }}">
+        href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/datatables/dataTables.bootstrap5.min.css') }}">
     <!-- wow animation css -->
-    <link rel="stylesheet" href="{{ helper::assetUrl('front/css/wow.css') }}" />
+    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'front/css/wow.css') }}" />
     <link rel="icon" type="image" sizes="16x16"
         href="{{ helper::image_path(helper::appdata($vendordata->id)->favicon) }}"><!-- Favicon icon -->
     <title>{{ helper::appdata($vendordata->id)->web_title }}</title>
@@ -281,20 +281,20 @@
     @include('front.layout.models')
 
 
-    <script src="{{ helper::assetUrl('front/js/jquery/jquery.min.js') }}"></script>
-    <script src="{{ helper::assetUrl('front/js/bootstrap/bootstrap.bundle.js') }}"></script>
-    <script src="{{ helper::assetUrl('front/js/bootstrap/bootstrap-select.min.js') }}"></script><!-- Bootstrap JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/bootstrap/bootstrap.bundle.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/bootstrap/bootstrap-select.min.js') }}"></script><!-- Bootstrap JS -->
     <script src="{{ url(env('ASSETPATHURL') . 'front/js/owl.carousel.js') }}"></script>
-    <script src="{{ helper::assetUrl('front/js/glightbox.js') }}"></script><!-- glightbox JS -->
-    <script src="{{ helper::assetUrl('front/js/owl.carousel.min.js') }}"></script>
-    <script src="{{ helper::assetUrl('front/js/jquery.number.min.js') }}"></script>
-    <script src="{{ helper::assetUrl('admin-assets/js/sweetalert/sweetalert2.min.js') }}"></script><!-- Sweetalert JS -->
-    <script src="{{ helper::assetUrl('admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
-    <script src="{{ helper::assetUrl('admin-assets/js/sweetalert/sweetalert2.min.js') }}"></script>
-    <script src="{{ helper::assetUrl('admin-assets/js/datatables/jquery.dataTables.min.js') }}"></script><!-- Datatables JS -->
-    <script src="{{ helper::assetUrl('admin-assets/js/datatables/dataTables.bootstrap5.min.js') }}"></script><!-- Datatables Bootstrap5 JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/glightbox.js') }}"></script><!-- glightbox JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/owl.carousel.min.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/jquery.number.min.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/sweetalert/sweetalert2.min.js') }}"></script><!-- Sweetalert JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/sweetalert/sweetalert2.min.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/jquery.dataTables.min.js') }}"></script><!-- Datatables JS -->
+    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/dataTables.bootstrap5.min.js') }}"></script><!-- Datatables Bootstrap5 JS -->
     <!-- wow js -->
-    <script src="{{ helper::assetUrl('front/js/wow.min.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/wow.min.js') }}"></script>
     <script>
         new WOW().init();
 
@@ -460,7 +460,7 @@
             </script>
         @endif
     @endif
-    <script src="{{ helper::assetUrl('front/js/common.js') }}"></script>
+    <script src="{{ url(env('ASSETPATHURL') . 'front/js/common.js') }}"></script>
     <script src="{{ url(env('ASSETPATHURL') . 'front/js/top_deals.js') }}"></script>
     @if (@helper::checkaddons('age_verification'))
         @if (@helper::getagedetails($vendordata->id)->age_verification_on_off == 1)
