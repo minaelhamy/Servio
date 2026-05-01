@@ -187,7 +187,12 @@ class HatchersActionController extends Controller
         $contactEmail = trim((string) ($payload['contact_email'] ?? ''));
         $contactPhone = trim((string) ($payload['contact_phone'] ?? ''));
         $businessAddress = trim((string) ($payload['business_address'] ?? ''));
+        $businessHours = trim((string) ($payload['business_hours'] ?? ''));
         $whatsappNumber = trim((string) ($payload['whatsapp_number'] ?? ''));
+        $googleReviewUrl = trim((string) ($payload['google_review_url'] ?? ''));
+        $enableOnlineBooking = array_key_exists('enable_online_booking', $payload) ? ((bool) $payload['enable_online_booking'] ? 1 : 2) : null;
+        $enableServiceMenu = array_key_exists('enable_service_menu', $payload) ? ((bool) $payload['enable_service_menu'] ? 1 : 2) : null;
+        $enableShopMenu = array_key_exists('enable_shop_menu', $payload) ? ((bool) $payload['enable_shop_menu'] ? 1 : 2) : null;
         $aboutContent = trim((string) ($payload['about_content'] ?? ''));
         $faqItems = collect((array) ($payload['faq_items'] ?? []))->filter(fn ($item): bool => is_array($item))->values();
         $socialLinks = collect((array) ($payload['social_links'] ?? []))->filter(fn ($item): bool => is_array($item))->values();
@@ -293,12 +298,34 @@ class HatchersActionController extends Controller
         }
         if ($contactPhone !== '') {
             $settings->contact = $contactPhone;
+            if ($this->settingsColumnExists('mobile')) {
+                $settings->mobile = $contactPhone;
+            }
         }
         if ($businessAddress !== '') {
             $settings->address = $businessAddress;
         }
+        if ($businessHours !== '' && $this->settingsColumnExists('description')) {
+            $existingDescription = trim((string) ($settings->description ?? ''));
+            $hoursLine = 'Hours: ' . $businessHours;
+            $settings->description = $existingDescription !== ''
+                ? trim($existingDescription . "\n" . $hoursLine)
+                : $hoursLine;
+        }
         if ($whatsappNumber !== '' && $this->settingsColumnExists('whatsapp_number')) {
             $settings->whatsapp_number = $whatsappNumber;
+        }
+        if ($googleReviewUrl !== '' && $this->settingsColumnExists('google_review')) {
+            $settings->google_review = $googleReviewUrl;
+        }
+        if ($enableOnlineBooking !== null && $this->settingsColumnExists('online_order')) {
+            $settings->online_order = $enableOnlineBooking;
+        }
+        if ($enableServiceMenu !== null && $this->settingsColumnExists('service_on_off')) {
+            $settings->service_on_off = $enableServiceMenu;
+        }
+        if ($enableShopMenu !== null && $this->settingsColumnExists('shop_on_off')) {
+            $settings->shop_on_off = $enableShopMenu;
         }
         if ($aboutContent !== '' && $this->settingsColumnExists('about_content')) {
             $settings->about_content = $aboutContent;
@@ -1799,14 +1826,78 @@ class HatchersActionController extends Controller
         }
 
         if ($story = $targets->get('story')) {
+            $storySource = trim((string) ($story['source_url'] ?? ''));
             $filename = $this->storeRemoteImageOrSource(
-                trim((string) ($story['source_url'] ?? '')),
+                $storySource,
                 storage_path('app/public/admin-assets/images/index/'),
                 'why-choose'
             );
             if ($filename) {
                 $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/index/' . (string) ($settings->why_choose_image ?? '')));
                 $settings->why_choose_image = $filename;
+            }
+            if ($this->settingsColumnExists('cover_image')) {
+                $coverFilename = $this->storeRemoteImageOrSource(
+                    $storySource,
+                    storage_path('app/public/admin-assets/images/coverimage/'),
+                    'cover'
+                );
+                if ($coverFilename) {
+                    $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/coverimage/' . (string) ($settings->cover_image ?? '')));
+                    $settings->cover_image = $coverFilename;
+                }
+            }
+            if ($this->settingsColumnExists('auth_image')) {
+                $authFilename = $this->storeRemoteImageOrSource(
+                    $storySource,
+                    storage_path('app/public/admin-assets/images/form/'),
+                    'auth'
+                );
+                if ($authFilename) {
+                    $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/form/' . (string) ($settings->auth_image ?? '')));
+                    $settings->auth_image = $authFilename;
+                }
+            }
+            if ($this->settingsColumnExists('referral_image')) {
+                $referralFilename = $this->storeRemoteImageOrSource(
+                    $storySource,
+                    storage_path('app/public/admin-assets/images/index/'),
+                    'referral'
+                );
+                if ($referralFilename) {
+                    $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/index/' . (string) ($settings->referral_image ?? '')));
+                    $settings->referral_image = $referralFilename;
+                }
+            }
+        }
+
+        if ($action = $targets->get('section_three') ?? $targets->get('action') ?? $targets->get('hero')) {
+            $actionSource = trim((string) ($action['source_url'] ?? ''));
+            if ($actionSource !== '' && $this->settingsColumnExists('order_success_image')) {
+                $successFilename = $this->storeRemoteImageOrSource(
+                    $actionSource,
+                    storage_path('app/public/admin-assets/images/index/'),
+                    'success'
+                );
+                if ($successFilename) {
+                    $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/index/' . (string) ($settings->order_success_image ?? '')));
+                    $settings->order_success_image = $successFilename;
+                }
+            }
+        }
+
+        if ($proof = $targets->get('section_two') ?? $targets->get('proof') ?? $targets->get('faq') ?? $targets->get('hero')) {
+            $proofSource = trim((string) ($proof['source_url'] ?? ''));
+            if ($proofSource !== '' && $this->settingsColumnExists('no_data_image')) {
+                $emptyFilename = $this->storeRemoteImageOrSource(
+                    $proofSource,
+                    storage_path('app/public/admin-assets/images/index/'),
+                    'no-data'
+                );
+                if ($emptyFilename) {
+                    $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/index/' . (string) ($settings->no_data_image ?? '')));
+                    $settings->no_data_image = $emptyFilename;
+                }
             }
         }
 
