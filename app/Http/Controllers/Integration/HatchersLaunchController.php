@@ -34,8 +34,26 @@ class HatchersLaunchController extends Controller
                 'expires' => ['required', 'integer'],
                 'signature' => ['required', 'string'],
             ]);
+            $this->logLaunch('request', [
+                'username' => (string) ($payload['username'] ?? ''),
+                'email' => (string) ($payload['email'] ?? ''),
+                'role' => (string) ($payload['role'] ?? ''),
+                'target' => (string) ($payload['target'] ?? ''),
+                'expires' => (int) ($payload['expires'] ?? 0),
+                'host' => (string) $request->getHost(),
+                'session_driver' => (string) config('session.driver'),
+                'session_domain' => (string) config('session.domain'),
+                'session_same_site' => (string) config('session.same_site'),
+                'session_secure' => (bool) config('session.secure'),
+            ]);
 
             if ((int) $payload['expires'] < time()) {
+                $this->logLaunch('expired', [
+                    'username' => (string) ($payload['username'] ?? ''),
+                    'email' => (string) ($payload['email'] ?? ''),
+                    'expires' => (int) ($payload['expires'] ?? 0),
+                    'now' => time(),
+                ]);
                 return redirect('/admin')->with('error', 'This Hatchers OS launch link has expired.');
             }
 
@@ -48,6 +66,12 @@ class HatchersLaunchController extends Controller
             ]), $sharedSecret);
 
             if (!hash_equals($expected, (string) $payload['signature'])) {
+                $this->logLaunch('invalid_signature', [
+                    'username' => (string) ($payload['username'] ?? ''),
+                    'email' => (string) ($payload['email'] ?? ''),
+                    'expected_prefix' => substr($expected, 0, 12),
+                    'received_prefix' => substr((string) $payload['signature'], 0, 12),
+                ]);
                 return redirect('/admin')->with('error', 'Invalid Hatchers OS launch signature.');
             }
 
@@ -59,6 +83,11 @@ class HatchersLaunchController extends Controller
             } elseif ($role === 'founder') {
                 $query->where('type', 2);
             } else {
+                $this->logLaunch('unsupported_role', [
+                    'role' => $role,
+                    'username' => (string) ($payload['username'] ?? ''),
+                    'email' => (string) ($payload['email'] ?? ''),
+                ]);
                 return redirect('/admin')->with('error', 'This Hatchers OS role is not supported in Servio yet.');
             }
 
@@ -71,6 +100,11 @@ class HatchersLaunchController extends Controller
             }
 
             if (empty($user)) {
+                $this->logLaunch('user_not_found', [
+                    'username' => (string) ($payload['username'] ?? ''),
+                    'email' => (string) ($payload['email'] ?? ''),
+                    'role' => $role,
+                ]);
                 return redirect('/admin')->with('error', 'No matching Servio account was found for this OS user.');
             }
 
@@ -83,6 +117,7 @@ class HatchersLaunchController extends Controller
             $request->session()->put('admin_login', 1);
             Auth::login($user, true);
             $request->session()->regenerate();
+            $request->session()->save();
 
             $target = (string) $payload['target'];
             if ($target === '' || str_starts_with($target, 'http')) {
@@ -92,6 +127,17 @@ class HatchersLaunchController extends Controller
             if ((int) ($user->type ?? 0) === 2 && $target === '/admin/dashboard') {
                 $target = '/admin/basic_settings';
             }
+
+            $this->logLaunch('login_success', [
+                'user_id' => (int) $user->id,
+                'username' => (string) ($user->username ?? ''),
+                'email' => (string) ($user->email ?? ''),
+                'user_type' => (int) ($user->type ?? 0),
+                'target' => $target,
+                'auth_check' => Auth::check(),
+                'auth_id' => Auth::id(),
+                'session_id' => (string) $request->session()->getId(),
+            ]);
 
             return redirect($target);
         } catch (Throwable $exception) {
@@ -127,5 +173,10 @@ class HatchersLaunchController extends Controller
         $subscription = SubscriptionSettings::firstOrNew(['vendor_id' => $vendorId]);
         $subscription->vendor_id = $vendorId;
         $subscription->save();
+    }
+
+    private function logLaunch(string $stage, array $context = []): void
+    {
+        error_log('[HatchersLaunch][' . $stage . '] ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
 }
