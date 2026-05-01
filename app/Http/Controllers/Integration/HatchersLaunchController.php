@@ -125,10 +125,6 @@ class HatchersLaunchController extends Controller
                 $target = '/admin/dashboard';
             }
 
-            if ((int) ($user->type ?? 0) === 2 && $target === '/admin/dashboard') {
-                $target = '/admin/basic_settings';
-            }
-
             $this->logLaunch('login_success', [
                 'user_id' => (int) $user->id,
                 'username' => (string) ($user->username ?? ''),
