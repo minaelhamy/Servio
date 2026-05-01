@@ -129,7 +129,7 @@
 </head>
 
 <body class="">
-    <main id="main-content" class="blur">
+    <main id="main-content">
         @include('front.layout.header')
         <div>
             @yield('content')
