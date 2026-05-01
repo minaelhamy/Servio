@@ -151,32 +151,25 @@ class BlogController extends Controller
     // ------------front blogs functions----------
     public function front_index(Request $request)
     {
+        $vendordata = helper::currentStoreUser($request->route('vendor'));
 
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = User::where('slug', $request->vendor)->first();
-            $vdata = $vendordata->id;
+        if (empty($vendordata)) {
+            abort(404);
         }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+
+        $vdata = $vendordata->id;
         $getblog = Blog::where('vendor_id', $vendordata->id)->orderBy('reorder_id')->paginate(6);
         return view('front.include.blog.blog', compact('getblog', 'vendordata','vdata'));
     }
     public function front_blogdetails(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = User::where('slug', $request->vendor)->first();
-            $vdata = $vendordata->id;
+        $vendordata = helper::currentStoreUser($request->route('vendor'));
+
+        if (empty($vendordata)) {
+            abort(404);
         }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+
+        $vdata = $vendordata->id;
         $blogdetail = Blog::where('slug', $request->blogslug)->first();
         $getblog = Blog::where('vendor_id', $vendordata->id)->orderBy('reorder_id')->take(3)->get();
         return view('front.include.blog.blog-detail', compact('getblog', 'blogdetail', 'vendordata','vdata'));

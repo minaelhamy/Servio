@@ -30,18 +30,19 @@ use Jorenvh\Share\ShareFacade;
 
 class ServiceController extends Controller
 {
+    private function resolveStorefrontVendor(Request $request): array
+    {
+        $vendordata = helper::currentStoreUser($request->route('vendor'));
+        if (empty($vendordata)) {
+            abort(404);
+        }
+
+        return [$vendordata, $vendordata->id];
+    }
+
     public function index(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $category_name = "";
         $getservice = Service::with('service_image')->where('is_available', 1)->where('is_deleted', 2)->where('vendor_id', @$vendordata->id);
         $categories = Category::where('is_available', 1)->where('is_deleted', 2)->where('vendor_id', @$vendordata->id)->orderBy('reorder_id')->get();
@@ -100,16 +101,7 @@ class ServiceController extends Controller
         } else {
             $userid = "";
         }
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $checkplan = helper::checkplan(@$vendordata->id, 3);
         $v = json_decode(json_encode($checkplan));
         if (@$v->original->status == 2) {
@@ -169,16 +161,7 @@ class ServiceController extends Controller
     }
     public function servicebooking(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
 
         $checkplan = helper::checkplan(@$vendordata->id, 3);
         $v = json_decode(json_encode($checkplan));
@@ -321,16 +304,7 @@ class ServiceController extends Controller
     }
     public function postreview(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         if (Auth::user() && Auth::user()->type == 3) {
             if (isset($request->product_id)) {
                 $booking = OrderDetails::where('user_id', Auth::user()->id)->where('vendor_id', $vendordata->id)->where('product_id', $request->product_id)->count();
@@ -392,16 +366,7 @@ class ServiceController extends Controller
     }
     public function removeall(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $favorite = Favorite::where('user_id', Auth::user()->id)->where('vendor_id', $vendordata->id)->get();
         Favorite::destroy($favorite->pluck('id')->toArray());
         return redirect()->back()->with('success', trans('messages.success'));

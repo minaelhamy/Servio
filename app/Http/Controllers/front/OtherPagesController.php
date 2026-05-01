@@ -19,18 +19,19 @@ use Lunaweb\RecaptchaV3\Facades\RecaptchaV3;
 
 class OtherPagesController extends Controller
 {
+    private function resolveStorefrontVendor(Request $request): array
+    {
+        $vendordata = helper::currentStoreUser($request->route('vendor'));
+        if (empty($vendordata)) {
+            abort(404);
+        }
+
+        return [$vendordata, $vendordata->id];
+    }
+
     public function index(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $getworkinghours = Timing::where('vendor_id', $vdata)->get();
         $day = date('l', time());
         $todayworktime = Timing::where('vendor_id', $vdata)->where('day', $day)->first();
@@ -89,109 +90,48 @@ class OtherPagesController extends Controller
     }
     public function gallery(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $allgallery = Gallery::where('vendor_id', $vendordata->id)->orderBy('reorder_id')->get();
         $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderByDesc('reorder_id')->take(5)->get();
         return view('front.gallery.gallery', compact('vendordata','vdata', 'allgallery', 'reviewimage'));
     }
     public function faq(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $faqs = Faq::where('vendor_id', $vendordata->id)->orderBy('reorder_id')->get();
         $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderBy('reorder_id')->take(5)->get();
         return view('front.faq.faq', compact('vendordata','vdata', 'faqs', 'reviewimage'));
     }
     public function aboutus(Request $request)
     {
-       $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $getaboutus = helper::appdata($vendordata->id)->about_content;
         $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderBy('reorder_id')->take(5)->get();
         return view('front.other.aboutus', compact('vendordata','vdata', 'getaboutus', 'reviewimage'));
     }
     public function termscondition(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $gettermscondition = helper::appdata($vendordata->id)->terms_content;
         $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderBy('reorder_id')->take(5)->get();
         return view('front.other.terms', compact('vendordata','vdata', 'gettermscondition', 'reviewimage'));
     }
     public function privacypolicy(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $getprivacypolicy = helper::appdata($vendordata->id)->privacy_content;
         $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderBy('reorder_id')->take(5)->get();
         return view('front.other.privacypolicy', compact('vendordata','vdata', 'getprivacypolicy', 'reviewimage'));
     }
     public function service_unavailable(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         return view('front.other.service_unavailable', compact('vendordata','vdata'));
     }
     public function subscribe(Request $request)
     {
         try {
-            $host = $_SERVER['HTTP_HOST'];
-            if ($host  ==  env('WEBSITE_HOST')) {
-                $vendordata = helper::vendor_data($request->vendor);
-            }
-            // if the current host doesn't contain the website domain (meaning, custom domain)
-            else {
-                $vendordata = Settings::where('custom_domain', $host)->first();
-            }
+            [$vendordata] = $this->resolveStorefrontVendor($request);
             $subscribe = new Subscriber();
             $subscribe->vendor_id = $vendordata->id;
             $subscribe->email = $request->email;
@@ -203,16 +143,7 @@ class OtherPagesController extends Controller
     }
     public function refund_policy(Request $request)
     {
-        $host = $_SERVER['HTTP_HOST'];
-        if ($host  ==  env('WEBSITE_HOST')) {
-            $vendordata = helper::vendor_data($request->vendor);
-            $vdata = $vendordata->id;
-        }
-        // if the current host doesn't contain the website domain (meaning, custom domain)
-        else {
-            $vendordata = Settings::where('custom_domain', $host)->first();
-            $vdata = $vendordata->vendor_id;
-        }
+        [$vendordata, $vdata] = $this->resolveStorefrontVendor($request);
         $policy = Settings::where('vendor_id', $vendordata->id)->first();
         $reviewimage = Testimonials::where('vendor_id', $vendordata->id)->where('user_id', null)->where('service_id', null)->orderBy('reorder_id')->take(5)->get();
         return view('front.other.refund_policy', compact('policy', 'vendordata','vdata', 'reviewimage'));
