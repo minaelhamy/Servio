@@ -124,7 +124,7 @@ class HatchersActionController extends Controller
             return $this->createCatalogEntry($user, $vendorId, $payload);
         }
 
-        $title = trim((string) ($payload['title'] ?? ''));
+        $title = $this->normalizeGeneratedTitle(trim((string) ($payload['title'] ?? '')));
         $incomingMediaAssets = collect((array) ($payload['media_assets'] ?? []))
             ->filter(fn ($item): bool => is_array($item) && trim((string) ($item['source_url'] ?? '')) !== '')
             ->values();
@@ -133,16 +133,14 @@ class HatchersActionController extends Controller
             $title = 'New service draft';
         }
 
-        $slug = $this->uniqueSlug($title);
         $categoryId = $this->ensureCategory($vendorId);
-
-        $service = new Service();
+        $service = $this->findServiceByNormalizedTitle($vendorId, $title) ?? new Service();
         $service->vendor_id = $vendorId;
         $service->category_id = (string) $categoryId;
         $service->name = $title;
-        $service->slug = $slug;
-        $service->price = (float) ($payload['price'] ?? 0);
-        $service->original_price = (float) ($payload['original_price'] ?? ($payload['price'] ?? 0));
+        $service->slug = $this->uniqueSlug($title, $service->exists ? (int) $service->id : null);
+        $service->price = $this->normalizeMoneyValue($payload['price'] ?? 0);
+        $service->original_price = $this->normalizeMoneyValue($payload['original_price'] ?? ($payload['price'] ?? 0));
         $service->discount_percentage = 0;
         $service->tax = '';
         $service->description = trim((string) ($payload['description'] ?? 'Created from Hatchers OS by Atlas.'));
@@ -157,6 +155,7 @@ class HatchersActionController extends Controller
         $service->is_deleted = 2;
         $service->is_imported = 2;
         $service->save();
+        $this->cleanupDuplicateServices($vendorId, $service, $title);
 
         if ($mediaAssets->isNotEmpty()) {
             $this->syncCategoryAssetFromMedia($vendorId, $categoryId, $mediaAssets->all());
@@ -511,18 +510,21 @@ class HatchersActionController extends Controller
 
     private function createBlog(User $user, int $vendorId, array $payload)
     {
-        $title = trim((string) ($payload['title'] ?? ''));
+        $title = $this->normalizeGeneratedTitle(trim((string) ($payload['title'] ?? '')));
         if ($title === '') {
             $title = 'New blog draft';
         }
 
-        $blog = new Blog();
+        $blog = $this->findBlogByNormalizedTitle($vendorId, $title) ?? new Blog();
         $blog->vendor_id = $vendorId;
         $blog->title = $title;
-        $blog->slug = $this->uniqueBlogSlug($title);
+        $blog->slug = $this->uniqueBlogSlug($title, $blog->exists ? (int) $blog->id : null);
         $blog->description = trim((string) ($payload['description'] ?? 'Created from Hatchers OS by Atlas.'));
-        $blog->image = '';
+        if (!$blog->exists) {
+            $blog->image = '';
+        }
         $blog->save();
+        $this->cleanupDuplicateBlogs($vendorId, $blog, $title);
 
         $mediaAssets = collect((array) ($payload['media_assets'] ?? []))
             ->filter(fn ($item): bool => is_array($item) && trim((string) ($item['source_url'] ?? '')) !== '')
@@ -1305,6 +1307,21 @@ class HatchersActionController extends Controller
         return $query->latest('id')->first();
     }
 
+    private function findServiceByNormalizedTitle(int $vendorId, string $title): ?Service
+    {
+        $normalized = $this->normalizeGeneratedTitle($title);
+        if ($normalized === '') {
+            return null;
+        }
+
+        return Service::where('vendor_id', $vendorId)
+            ->where('is_deleted', 2)
+            ->get()
+            ->first(function (Service $service) use ($normalized): bool {
+                return $this->normalizeGeneratedTitle((string) ($service->name ?? '')) === $normalized;
+            });
+    }
+
     private function findTargetCategory(int $vendorId, array $payload): ?Category
     {
         $query = Category::where('vendor_id', $vendorId)->where('is_deleted', 2);
@@ -1417,6 +1434,82 @@ class HatchersActionController extends Controller
         }
 
         return $query->latest('id')->first();
+    }
+
+    private function findBlogByNormalizedTitle(int $vendorId, string $title): ?Blog
+    {
+        $normalized = $this->normalizeGeneratedTitle($title);
+        if ($normalized === '') {
+            return null;
+        }
+
+        return Blog::where('vendor_id', $vendorId)
+            ->get()
+            ->first(function (Blog $blog) use ($normalized): bool {
+                return $this->normalizeGeneratedTitle((string) ($blog->title ?? '')) === $normalized;
+            });
+    }
+
+    private function cleanupDuplicateServices(int $vendorId, Service $keeper, string $title): void
+    {
+        $normalized = $this->normalizeGeneratedTitle($title);
+        if ($normalized === '') {
+            return;
+        }
+
+        Service::where('vendor_id', $vendorId)
+            ->where('is_deleted', 2)
+            ->where('id', '!=', $keeper->id)
+            ->get()
+            ->filter(fn (Service $service): bool => $this->normalizeGeneratedTitle((string) ($service->name ?? '')) === $normalized)
+            ->each(function (Service $service): void {
+                $service->is_deleted = 1;
+                $service->save();
+            });
+    }
+
+    private function cleanupDuplicateBlogs(int $vendorId, Blog $keeper, string $title): void
+    {
+        $normalized = $this->normalizeGeneratedTitle($title);
+        if ($normalized === '') {
+            return;
+        }
+
+        Blog::where('vendor_id', $vendorId)
+            ->where('id', '!=', $keeper->id)
+            ->get()
+            ->filter(fn (Blog $blog): bool => $this->normalizeGeneratedTitle((string) ($blog->title ?? '')) === $normalized)
+            ->each(function (Blog $blog): void {
+                $blog->delete();
+            });
+    }
+
+    private function normalizeGeneratedTitle(string $title): string
+    {
+        $title = trim((string) Str::of($title)->replaceMatches('/\s+/', ' '));
+        if ($title === '') {
+            return '';
+        }
+
+        $title = preg_replace('/\b([A-Za-z]+)(?:\s+\1\b)+/i', '$1', $title) ?? $title;
+        $title = preg_replace('/\b(Starter|Core|Premium)(?:\s+\1\b)+/i', '$1', $title) ?? $title;
+        $title = preg_replace('/\s{2,}/', ' ', $title) ?? $title;
+
+        return trim((string) $title, " \t\n\r\0\x0B.-");
+    }
+
+    private function normalizeMoneyValue(mixed $value): float
+    {
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        $normalized = preg_replace('/[^0-9.\-]/', '', trim((string) $value)) ?? '';
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return 0.0;
+        }
+
+        return (float) $normalized;
     }
 
     private function normalizePageName(string $page): string
