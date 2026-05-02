@@ -45,6 +45,10 @@
             $ordersuccess = 'order-success-*';
             $success = 'success-*';
         }
+        $settings = helper::appdata($vendordata->id);
+        $bookingSuccessImage = request()->is($success)
+            ? helper::image_path($settings->logo)
+            : helper::image_path($settings->order_success_image ?: $settings->logo);
     @endphp
 
     <!-- new order design -->
@@ -53,7 +57,7 @@
             <div class="dive">
                 <div class="col-md-8  m-auto">
                     <div class="order-success-img my-4">
-                        <img src="{{ helper::image_path(helper::appdata($vendordata->id)->order_success_image) }}"
+                        <img src="{{ $bookingSuccessImage }}"
                             alt="" class="logo-image">
                     </div>
                     @if (request()->is($ordersuccess))
