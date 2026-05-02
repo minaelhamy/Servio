@@ -25,22 +25,22 @@
     <link rel="icon" type="image" sizes="16x16" href="{{ helper::image_path(helper::appdata('')->favicon) }}">
     <!-- Favicon icon -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/bootstrap/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/bootstrap/bootstrap.min.css') }}">
 
     <!-- Bootstrap CSS -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/fontawesome/all.min.css') }}">
 
     <!-- FontAwesome CSS -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/toastr/toastr.min.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/toastr/toastr.min.css') }}">
 
     <!-- FontAwesome CSS -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/style.css') }}"><!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/hatchers-brand.css?v=' . @filemtime(storage_path('app/public/admin-assets/css/hatchers-brand.css'))) }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/style.css') }}"><!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/hatchers-brand.css') }}?v={{ @filemtime(storage_path('app/public/admin-assets/css/hatchers-brand.css')) }}">
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/responsive.css') }}">
     <style>
         :root {
             /* Color */
@@ -68,11 +68,11 @@
 
     </main>
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/jquery/jquery.min.js') }}"></script><!-- jQuery JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/jquery/jquery.min.js') }}"></script><!-- jQuery JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script><!-- Bootstrap JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script><!-- Bootstrap JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
 
 
 
@@ -103,7 +103,7 @@
         }
     </script>
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/auth_default.js') }}"></script>
+    <script src="{{ helper::assetUrl('admin-assets/js/auth_default.js') }}"></script>
 
     @yield('scripts')
 

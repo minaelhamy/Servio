@@ -36,41 +36,41 @@
         <link rel="icon" type="image" sizes="16x16"
             href="{{ helper::image_path(@helper::appdata('')->favicon) }}"><!-- Favicon icon -->
     @endif
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/bootstrap/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet"
-        href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/bootstrap/bootstrap-select.min.css') }}">
+        href="{{ helper::assetUrl('admin-assets/css/bootstrap/bootstrap-select.min.css') }}">
     <!-- Bootstrap CSS -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/fontawesome/all.min.css') }}">
     <!-- FontAwesome CSS -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/toastr/toastr.min.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/toastr/toastr.min.css') }}">
 
     <!-- Toastr CSS -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/sweetalert/sweetalert2.min.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/sweetalert/sweetalert2.min.css') }}">
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/chartjs/chart_3.9.1.min.js') }}"></script>
+    <script src="{{ helper::assetUrl('admin-assets/js/chartjs/chart_3.9.1.min.js') }}"></script>
 
     <!-- Sweetalert CSS -->
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/style.css') }}"><!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/hatchers-brand.css?v=' . @filemtime(storage_path('app/public/admin-assets/css/hatchers-brand.css'))) }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/style.css') }}"><!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/hatchers-brand.css') }}?v={{ @filemtime(storage_path('app/public/admin-assets/css/hatchers-brand.css')) }}">
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/responsive.css') }}">
 
     <!-- Responsive CSS -->
 
     <link rel="stylesheet"
-        href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/timepicker/jquery.timepicker.min.css') }}">
+        href="{{ helper::assetUrl('admin-assets/css/timepicker/jquery.timepicker.min.css') }}">
 
     <link rel="stylesheet"
-        href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/datatables/dataTables.bootstrap5.min.css') }}">
+        href="{{ helper::assetUrl('admin-assets/css/datatables/dataTables.bootstrap5.min.css') }}">
 
     <link rel="stylesheet"
-        href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/datatables/buttons.dataTables.min.css') }}">
+        href="{{ helper::assetUrl('admin-assets/css/datatables/buttons.dataTables.min.css') }}">
 
-    <link rel="stylesheet" href="{{ url(env('ASSETPATHURL') . 'admin-assets/css/fullcalendar.css') }}">
+    <link rel="stylesheet" href="{{ helper::assetUrl('admin-assets/css/fullcalendar.css') }}">
     <style>
         :root {
             /* Color */
@@ -179,7 +179,7 @@
 
                         <div class="modal-content text-center">
                             <div class="modal-body">
-                                <img src="{{ url('storage/app/public/admin-assets/images/icons-bell.gif') }}"
+                                <img src="{{ helper::assetUrl('admin-assets/images/icons-bell.gif') }}"
                                     class="mb-4 icon-bell" alt="">
                                 <p class="heading fs-5 fw-600 color-changer">{{ trans('messages.be_up_to_date') }}</p>
                                 <p class="fs-16 fw-500 color-changer">{{ trans('messages.new_booking_arrive') }}</p>
@@ -208,7 +208,7 @@
 
                         <div class="modal-content text-center">
                             <div class="modal-body">
-                                <img src="{{ url('storage/app/public/admin-assets/images/icons-bell.gif') }}"
+                                <img src="{{ helper::assetUrl('admin-assets/images/icons-bell.gif') }}"
                                     class="mb-4 icon-bell" alt="">
                                 <p class="heading fs-5 fw-600 color-changer">{{ trans('messages.be_up_to_date') }}</p>
                                 <p class="fs-16 fw-500 color-changer">{{ trans('messages.new_order_arrive') }}</p>
@@ -253,28 +253,28 @@
         </div>
     </main>
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/jquery/jquery.min.js') }}"></script><!-- jQuery JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/jquery/jquery.min.js') }}"></script><!-- jQuery JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script><!-- Bootstrap JS -->
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/bootstrap/bootstrap-select.min.js') }}"></script><!-- Bootstrap JS -->
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/bootstrap/bootstrap.bundle.min.js') }}"></script><!-- Bootstrap JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/bootstrap/bootstrap-select.min.js') }}"></script><!-- Bootstrap JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/toastr/toastr.min.js') }}"></script><!-- Toastr JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/sweetalert/sweetalert2.min.js') }}"></script><!-- Sweetalert JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/sweetalert/sweetalert2.min.js') }}"></script><!-- Sweetalert JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/jquery.dataTables.min.js') }}"></script><!-- Datatables JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/datatables/jquery.dataTables.min.js') }}"></script><!-- Datatables JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/dataTables.bootstrap5.min.js') }}"></script><!-- Datatables Bootstrap5 JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/datatables/dataTables.bootstrap5.min.js') }}"></script><!-- Datatables Bootstrap5 JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/dataTables.buttons.min.js') }}"></script><!-- Datatables Buttons JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/datatables/dataTables.buttons.min.js') }}"></script><!-- Datatables Buttons JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/jszip.min.js') }}"></script><!-- Datatables Excel Buttons JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/datatables/jszip.min.js') }}"></script><!-- Datatables Excel Buttons JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/pdfmake.min.js') }}"></script><!-- Datatables Make PDF Buttons JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/datatables/pdfmake.min.js') }}"></script><!-- Datatables Make PDF Buttons JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/vfs_fonts.js') }}"></script><!-- Datatables Export PDF Buttons JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/datatables/vfs_fonts.js') }}"></script><!-- Datatables Export PDF Buttons JS -->
 
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/datatables/buttons.html5.min.js') }}"></script><!-- Datatables Buttons HTML5 JS -->
-    <script src="{{ url(env('ASSETPATHURL') . 'front/js/jquery.number.min.js') }}"></script>
+    <script src="{{ helper::assetUrl('admin-assets/js/datatables/buttons.html5.min.js') }}"></script><!-- Datatables Buttons HTML5 JS -->
+    <script src="{{ helper::assetUrl('front/js/jquery.number.min.js') }}"></script>
 
     <script>
         var are_you_sure = "{{ trans('messages.are_you_sure') }}";
@@ -299,7 +299,7 @@
             var bookingnotificationurl = "{{ URL::to('/admin/getbooking') }}";
             var ordernotificationurl = "{{ URL::to('/admin/getorder') }}";
             var vendoraudio =
-                "{{ url(env('ASSETPATHURL') . 'admin-assets/notification/' . helper::appdata(Auth::user()->id)->notification_sound) }}";
+                "{{ helper::assetUrl('admin-assets/notification/' . helper::appdata(Auth::user()->id)->notification_sound) }}";
         @endif
 
         function currency_formate(price) {
@@ -347,12 +347,12 @@
     </script>
     @if (@helper::checkaddons('notification'))
         @if (Auth::user()->type == 2)
-            <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/sound.js') }}"></script>
+            <script src="{{ helper::assetUrl('admin-assets/js/sound.js') }}"></script>
         @endif
     @endif
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/jquery/jquery-ui.min.js') }}"></script>
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/common.js') }}"></script><!-- Common JS -->
-    <script src="{{ url(env('ASSETPATHURL') . 'admin-assets/js/calendar/moment.min.js') }}"></script>
+    <script src="{{ helper::assetUrl('admin-assets/js/jquery/jquery-ui.min.js') }}"></script>
+    <script src="{{ helper::assetUrl('admin-assets/js/common.js') }}"></script><!-- Common JS -->
+    <script src="{{ helper::assetUrl('admin-assets/js/calendar/moment.min.js') }}"></script>
     @yield('scripts')
 
 </body>
