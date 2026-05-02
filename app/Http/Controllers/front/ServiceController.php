@@ -224,6 +224,10 @@ class ServiceController extends Controller
             $minute = "";
             $time = Timing::where('vendor_id', $request->vendor_id)->where('day', $day)->where('service_id', $request->service_id)->first();
 
+            if (empty($time)) {
+                return response()->json(['status' => 0], 200);
+            }
+
             if ($time->is_always_close == 1) {
                 $slots = "1";
             } else {
@@ -233,29 +237,52 @@ class ServiceController extends Controller
                 if ($service->interval_type == 1) {
                     $minute = $service->interval_time;
                 }
-                $firsthalf = new CarbonPeriod(date("H:i", strtotime($time->open_time)), $minute . ' minutes', date("H:i", strtotime($time->break_start))); // for create use 24 hours format later change format
-                $secondhalf =  new CarbonPeriod(date("H:i", strtotime($time->break_end)), $minute . ' minutes', date("H:i", strtotime($time->close_time)));
-                if (helper::appdata($request->vendor_id)->time_format == 1) {
-                    foreach ($firsthalf as $item) {
+                $openTime = date("H:i", strtotime((string) $time->open_time));
+                $closeTime = date("H:i", strtotime((string) $time->close_time));
+                $breakStart = !empty($time->break_start) ? date("H:i", strtotime((string) $time->break_start)) : null;
+                $breakEnd = !empty($time->break_end) ? date("H:i", strtotime((string) $time->break_end)) : null;
+                $ranges = [];
 
-                        $starttime[] = $item->format("H:i");
-                    }
-                    foreach ($secondhalf as $item) {
-                        $endtime[] = $item->format("H:i");
+                if ($minute <= 0 || strtotime($closeTime) <= strtotime($openTime)) {
+                    return response()->json(['status' => 0], 200);
+                }
+
+                if (
+                    $breakStart !== null &&
+                    $breakEnd !== null &&
+                    strtotime($breakStart) > strtotime($openTime) &&
+                    strtotime($breakEnd) < strtotime($closeTime) &&
+                    strtotime($breakEnd) > strtotime($breakStart)
+                ) {
+                    $ranges[] = [$openTime, $breakStart];
+                    $ranges[] = [$breakEnd, $closeTime];
+                } else {
+                    $ranges[] = [$openTime, $closeTime];
+                }
+
+                $temparray = [];
+                if (helper::appdata($request->vendor_id)->time_format == 1) {
+                    foreach ($ranges as [$rangeStart, $rangeEnd]) {
+                        $period = new CarbonPeriod($rangeStart, $minute . ' minutes', $rangeEnd);
+                        $rangeSlots = [];
+                        foreach ($period as $item) {
+                            $rangeSlots[] = $item->format("H:i");
+                        }
+                        for ($i = 0; $i < count($rangeSlots) - 1; $i++) {
+                            $temparray[] = $rangeSlots[$i] . ' - ' . $rangeSlots[$i + 1];
+                        }
                     }
                 } else {
-                    foreach ($firsthalf as $item) {
-                        $starttime[] = $item->format("h:i A");
+                    foreach ($ranges as [$rangeStart, $rangeEnd]) {
+                        $period = new CarbonPeriod($rangeStart, $minute . ' minutes', $rangeEnd);
+                        $rangeSlots = [];
+                        foreach ($period as $item) {
+                            $rangeSlots[] = $item->format("h:i A");
+                        }
+                        for ($i = 0; $i < count($rangeSlots) - 1; $i++) {
+                            $temparray[] = $rangeSlots[$i] . ' - ' . $rangeSlots[$i + 1];
+                        }
                     }
-                    foreach ($secondhalf as $item) {
-                        $endtime[] = $item->format("h:i A");
-                    }
-                }
-                for ($i = 0; $i < count($starttime) - 1; $i++) {
-                    $temparray[] = $starttime[$i] . ' ' . '-' . ' ' . next($starttime);
-                }
-                for ($i = 0; $i < count($endtime) - 1; $i++) {
-                    $temparray[] = $endtime[$i] . ' ' . '-' . ' ' . next($endtime);
                 }
                 $currenttime = Carbon::now()->format('h:i a');
                 $current_date = Carbon::now()->format('Y-m-d');
