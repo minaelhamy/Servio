@@ -201,10 +201,19 @@
                                                     {{ trans('labels.booking_date') }}
                                                 </h4>
 
-                                                <div class="card h-100 rounded-2 border-0 bg-white shadow">
+                                                    <div class="card h-100 rounded-2 border-0 bg-white shadow">
                                                     <div class="card-body">
                                                         <div class="sl-appointment-calendar mb-3">
-                                                            <div id="sl-calendar"></div>
+                                                            <div id="sl-calendar">
+                                                                <div id="sl-calendar-fallback" class="p-2">
+                                                                    <label for="booking_date_fallback"
+                                                                        class="form-label fw-semibold color-changer">
+                                                                        {{ trans('labels.booking_date') }}
+                                                                    </label>
+                                                                    <input type="date" id="booking_date_fallback"
+                                                                        class="form-control form-control-lg">
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1223,6 +1232,111 @@
     <script src="{{ helper::assetUrl('front/js/calander/moment.min.js') }}"></script>
     <script src="{{ helper::assetUrl('front/js/calander/fullcalendar.min.js') }}"></script>
     <script src="{{ helper::assetUrl('front/js/service.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            var fallbackInput = $('#booking_date_fallback');
+            var fallbackWrapper = $('#sl-calendar-fallback');
+            if (!fallbackInput.length || !fallbackWrapper.length) {
+                return;
+            }
+
+            var today = new Date().toISOString().split('T')[0];
+            var selectedDate = getCookie('booking_date');
+            var initialDate = selectedDate && selectedDate >= today ? selectedDate : today;
+
+            fallbackInput.attr('min', today).val(initialDate);
+
+            function loadBookingDate(selectedDateValue) {
+                if (!selectedDateValue || selectedDateValue < today) {
+                    return;
+                }
+
+                if (typeof handleBookingDateSelection === 'function') {
+                    handleBookingDateSelection(selectedDateValue);
+                    return;
+                }
+
+                $('#date_select_msg').hide();
+                $('#timelist').removeClass('d-flex align-items-center justify-content-center');
+
+                document.cookie = 'booking_date=' + selectedDateValue + ';path=/';
+                document.cookie = 'booking_time=;path=/';
+
+                $.ajax({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    url: $('#timesloturl').val(),
+                    type: 'post',
+                    dataType: 'json',
+                    data: {
+                        inputDate: selectedDateValue,
+                        vendor_id: $('#vendor_id').val(),
+                        service_id: $('#service_id').val()
+                    },
+                    success: function(response) {
+                        let html = '';
+                        $('#no-slote').hide();
+
+                        if (response.status == 0) {
+                            $('#no-slote').show();
+                            $('#timeslote').hide();
+                            return;
+                        }
+
+                        if (response == '1') {
+                            html += '<label class="text-danger"><h5>' + store_close + '</h5><label>';
+                            $('#timelist').addClass('d-flex align-items-center justify-content-center');
+                            $('#close').show().html(html);
+                            $('#timeslote').hide();
+                            return;
+                        }
+
+                        $('#timelist').removeClass('d-flex align-items-center justify-content-center');
+
+                        for (var i in response) {
+                            var status = 'lable-disable ';
+                            var disable = 'disabled';
+                            if (response[i]['status'] === 'active') {
+                                status = 'lable-active';
+                                disable = '';
+                            }
+                            html +=
+                                '<div class="col-lg-4 col-md-6 col-12 d-flex"><span class="sl-radio next-step w-100"><input type="radio" name="time" onclick="selecttimeslot(this);" value="' +
+                                response[i]['slot'] +
+                                '" id="fallbackTime' +
+                                i +
+                                '" ' +
+                                disable +
+                                '><label for="fallbackTime' +
+                                i +
+                                '" class="text-center w-100 ' +
+                                status +
+                                '">' +
+                                response[i]['slot'] +
+                                '</label></span></div>';
+                        }
+
+                        $('#timeslote').show().html(html);
+                        $('#close').hide();
+                    }
+                });
+            }
+
+            fallbackInput.on('change', function() {
+                loadBookingDate($(this).val());
+            });
+
+            setTimeout(function() {
+                if ($('#sl-calendar .fc-view-container, #sl-calendar .fc-view').length) {
+                    fallbackWrapper.hide();
+                } else {
+                    fallbackWrapper.show();
+                    loadBookingDate(fallbackInput.val());
+                }
+            }, 300);
+        });
+    </script>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script> {{-- Razorpay --}}
     <script src="https://js.stripe.com/v3/"></script> {{-- Stripe --}}
