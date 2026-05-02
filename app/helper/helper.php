@@ -173,6 +173,12 @@ class helper
             'domain' => '{custom_domain}',
             'where' => ['custom_domain' => self::customDomainRoutePattern()],
         ]), $callback);
+
+        // Fallback path-based storefront routes keep working even when the
+        // platform host configuration is stale or mismatched in production.
+        Route::group(array_merge($attributes, [
+            'prefix' => '{' . $pathParameter . '}',
+        ]), $callback);
     }
 
     public static function customDomainRecord($host = null)
