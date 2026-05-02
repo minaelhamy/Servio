@@ -1220,9 +1220,9 @@
         var xendit_url = $("#xendit_url").val();
         var bank_url = $("#bank_url").val();
     </script>
-    <script src="{{ url(env('ASSETPATHURL') . 'front/js/calander/moment.min.js') }}"></script>
-    <script src="{{ url(env('ASSETPATHURL') . 'front/js/calander/fullcalendar.min.js') }}"></script>
-    <script src="{{ url(env('ASSETPATHURL') . 'front/js/service.js') }}"></script>
+    <script src="{{ helper::assetUrl('front/js/calander/moment.min.js') }}"></script>
+    <script src="{{ helper::assetUrl('front/js/calander/fullcalendar.min.js') }}"></script>
+    <script src="{{ helper::assetUrl('front/js/service.js') }}"></script>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script> {{-- Razorpay --}}
     <script src="https://js.stripe.com/v3/"></script> {{-- Stripe --}}

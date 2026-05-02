@@ -1160,5 +1160,5 @@
             $('#social-links').toggleClass('d-none');
         }
     </script>
-    <script src="{{ url(env('ASSETPATHURL') . 'front/js/service.js') }}"></script>
+    <script src="{{ helper::assetUrl('front/js/service.js') }}"></script>
 @endsection
