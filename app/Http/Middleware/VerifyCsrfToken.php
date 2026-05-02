@@ -16,6 +16,10 @@ class VerifyCsrfToken extends Middleware
         '*/mercadoordersuccess',
         '*/paymentsuccess',
         '*/embedded/timeslot',
+        '*/service/timeslot',
+        '*/service/slotlimit',
+        '*/service/stafflimit',
+        '*/service/booking',
         '*/addwalletsuccess',
         '*/addfail',
     ];
