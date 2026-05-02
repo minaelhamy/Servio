@@ -2,40 +2,7 @@ $(document).ready(function () {
   "use strict";
   /*  APPOINTMENTS CALENDER  */
   if (document.getElementById("sl-calendar")) {
-    jQuery("#sl-calendar").fullCalendar({
-      height: "auto",
-      dayRender: function (date, cell) {
-        // It's an example, do your own test here
-        if (cell.hasClass("fc-past")) {
-          cell.addClass("disabled");
-        }
-      },
-      dayClick: function (date, jsEvent, view) {
-        var selected_date = moment(date).format("YYYY-MM-DD");
-        var newdate = new Date();
-        var current_date = moment(newdate).format("YYYY-MM-DD");
-        if (selected_date < current_date) {
-          return false;
-        }
-        $("#date_select_msg").hide();
-        $("#timelist").removeClass(
-          "d-flex align-items-center justify-content-center"
-        );
-        setdatecookie(selected_date);
-        settimecookie("");
-        callajaxtimeslot(selected_date);
-      }
-    });
-
-    $("#timelist").addClass("d-flex align-items-center justify-content-center");
-
-    $("#sl-calendar")
-      .find(".fc-state-highlight")
-      .removeClass("fc-today fc-state-highlight text-white");
-
-    $(".sl-appointmentPopup").on("shown.bs.modal", function () {
-      $("#sl-calendar").fullCalendar("render");
-    });
+    initBookingCalendar();
   }
   checkyearmonth();
   checkdataexist();
@@ -47,6 +14,80 @@ $(document).ready(function () {
     $(".staff_member").html(getCookie("staff_name"));
   }
 });
+
+function initBookingCalendar() {
+  "use strict";
+  $("#timelist").addClass("d-flex align-items-center justify-content-center");
+
+  if (typeof jQuery.fn.fullCalendar !== "function" || typeof moment !== "function") {
+    renderBookingDateFallback();
+    return;
+  }
+
+  try {
+    jQuery("#sl-calendar").fullCalendar({
+      height: "auto",
+      dayRender: function (date, cell) {
+        if (cell.hasClass("fc-past")) {
+          cell.addClass("disabled");
+        }
+      },
+      dayClick: function (date) {
+        handleBookingDateSelection(moment(date).format("YYYY-MM-DD"));
+      }
+    });
+
+    $("#sl-calendar")
+      .find(".fc-state-highlight")
+      .removeClass("fc-today fc-state-highlight text-white");
+
+    $(".sl-appointmentPopup").on("shown.bs.modal", function () {
+      $("#sl-calendar").fullCalendar("render");
+    });
+  } catch (error) {
+    renderBookingDateFallback();
+  }
+}
+
+function renderBookingDateFallback() {
+  "use strict";
+  var today = new Date().toISOString().split("T")[0];
+  var selectedDate = getCookie("booking_date");
+  var initialDate = selectedDate && selectedDate >= today ? selectedDate : today;
+  var fallbackHtml =
+    '<div class="booking-date-fallback">' +
+    '<label for="booking_date_fallback" class="form-label fw-semibold mb-2">Select your booking date</label>' +
+    '<input type="date" id="booking_date_fallback" class="form-control form-control-lg" min="' +
+    today +
+    '" value="' +
+    initialDate +
+    '">' +
+    "</div>";
+
+  $("#sl-calendar").html(fallbackHtml);
+
+  $("#booking_date_fallback").on("change", function () {
+    handleBookingDateSelection($(this).val());
+  });
+
+  if (initialDate) {
+    handleBookingDateSelection(initialDate);
+  }
+}
+
+function handleBookingDateSelection(selected_date) {
+  "use strict";
+  var current_date = new Date().toISOString().split("T")[0];
+  if (!selected_date || selected_date < current_date) {
+    return false;
+  }
+  $("#date_select_msg").hide();
+  $("#timelist").removeClass("d-flex align-items-center justify-content-center");
+  setdatecookie(selected_date);
+  settimecookie("");
+  callajaxtimeslot(selected_date);
+  return true;
+}
 
 $("body").on("click", "button.fc-prev-button", function () {
   "use strict";
