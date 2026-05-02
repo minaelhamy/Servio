@@ -1972,7 +1972,9 @@ class HatchersActionController extends Controller
             }
         }
 
-        if ($action = $targets->get('section_three') ?? $targets->get('action') ?? $targets->get('hero')) {
+        if ($this->settingsColumnExists('order_success_image') && trim((string) ($settings->logo ?? '')) !== '') {
+            $settings->order_success_image = (string) $settings->logo;
+        } elseif ($action = $targets->get('section_three') ?? $targets->get('action') ?? $targets->get('hero')) {
             $actionSource = trim((string) ($action['source_url'] ?? ''));
             if ($actionSource !== '' && $this->settingsColumnExists('order_success_image')) {
                 $successFilename = $this->storeRemoteImageOrSource(
@@ -2079,16 +2081,38 @@ class HatchersActionController extends Controller
         $category->save();
     }
 
-    private function syncServiceImagesFromMedia(int $serviceId, array $mediaAssets): void
+    private function syncServiceImagesFromMedia(int $serviceId, array $mediaAssets, int $offset = 0): void
     {
         $targets = ['service_primary', 'service_detail', 'service_support', 'hero', 'section_one', 'section_two', 'section_three'];
         $assets = collect($targets)
             ->map(fn (string $target) => $this->findMediaTarget($mediaAssets, [$target]))
             ->filter(fn ($asset) => is_array($asset) && trim((string) ($asset['source_url'] ?? '')) !== '')
-            ->values();
+            ->values()
+            ->all();
 
-        if ($assets->isEmpty()) {
+        $assets = $this->distinctMediaAssets($assets);
+
+        if ($assets === []) {
             return;
+        }
+
+        $selectedAssets = array_slice($assets, $offset, 3);
+        if ($selectedAssets === []) {
+            $selectedAssets = array_slice($assets, 0, 3);
+        }
+
+        if (count($selectedAssets) < min(3, count($assets))) {
+            foreach ($assets as $asset) {
+                $alreadyIncluded = collect($selectedAssets)->contains(
+                    fn (array $selected): bool => trim((string) ($selected['source_url'] ?? '')) === trim((string) ($asset['source_url'] ?? ''))
+                );
+                if (!$alreadyIncluded) {
+                    $selectedAssets[] = $asset;
+                }
+                if (count($selectedAssets) >= min(3, count($assets))) {
+                    break;
+                }
+            }
         }
 
         foreach (ServiceImage::where('service_id', $serviceId)->get() as $existingImage) {
@@ -2096,7 +2120,7 @@ class HatchersActionController extends Controller
             $existingImage->delete();
         }
 
-        foreach ($assets as $index => $asset) {
+        foreach ($selectedAssets as $index => $asset) {
             $filename = $this->storeRemoteImageOrSource(
                 trim((string) ($asset['source_url'] ?? '')),
                 storage_path('app/public/admin-assets/images/service/'),
@@ -2129,8 +2153,8 @@ class HatchersActionController extends Controller
             ->take(3)
             ->get();
 
-        foreach ($services as $service) {
-            $this->syncServiceImagesFromMedia((int) $service->id, $mediaAssets);
+        foreach ($services as $index => $service) {
+            $this->syncServiceImagesFromMedia((int) $service->id, $mediaAssets, (int) $index);
         }
     }
 
@@ -2263,6 +2287,28 @@ class HatchersActionController extends Controller
         $this->replaceFileIfExists(storage_path('app/public/admin-assets/images/blog/' . (string) ($blog->image ?? '')));
         $blog->image = $filename;
         $blog->save();
+    }
+
+    private function distinctMediaAssets(array $assets): array
+    {
+        $resolved = [];
+        $seen = [];
+
+        foreach ($assets as $asset) {
+            if (!is_array($asset)) {
+                continue;
+            }
+
+            $source = trim((string) ($asset['source_url'] ?? ''));
+            if ($source === '' || isset($seen[$source])) {
+                continue;
+            }
+
+            $seen[$source] = true;
+            $resolved[] = $asset;
+        }
+
+        return $resolved;
     }
 
     private function syncGalleryAssetsFromMedia(int $vendorId, array $mediaAssets): void
