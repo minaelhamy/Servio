@@ -231,11 +231,11 @@ class ServiceController extends Controller
             if ($time->is_always_close == 1) {
                 $slots = "1";
             } else {
-                if ($service->interval_type == 2) {
-                    $minute = (int)$service->interval_time * 60;
+                if ((int) $service->interval_type === 1) {
+                    $minute = (int) $service->interval_time * 60;
                 }
-                if ($service->interval_type == 1) {
-                    $minute = $service->interval_time;
+                if ((int) $service->interval_type === 2) {
+                    $minute = (int) $service->interval_time;
                 }
                 $openTime = date("H:i", strtotime((string) $time->open_time));
                 $closeTime = date("H:i", strtotime((string) $time->close_time));

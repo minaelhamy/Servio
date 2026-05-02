@@ -82,10 +82,10 @@ class ServiceController extends Controller
                 if ($time->is_always_close == 1) {
                     $slots = "1";
                 } else {
-                    if ($service->interval_type == 2) {
-                        $minute = (float)$service->interval_time * 60;
+                    if ((int) $service->interval_type === 1) {
+                        $minute = (float) $service->interval_time * 60;
                     }
-                    if ($service->interval_type == 1) {
+                    if ((int) $service->interval_type === 2) {
                         $minute = $service->interval_time;
                     }
                     $firsthalf = new CarbonPeriod(date("H:i", strtotime($time->open_time)) , $minute . ' minutes', date("H:i", strtotime($time->break_start))); // for create use 24 hours format later change format 
