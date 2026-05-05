@@ -2083,7 +2083,7 @@ class HatchersActionController extends Controller
 
     private function syncServiceImagesFromMedia(int $serviceId, array $mediaAssets, int $offset = 0): void
     {
-        $targets = ['service_primary', 'service_detail', 'service_support', 'hero', 'section_one', 'section_two', 'section_three'];
+        $targets = ['service_primary', 'service_detail', 'service_support', 'service', 'hero', 'section_one', 'section_two', 'section_three'];
         $assets = collect($targets)
             ->map(fn (string $target) => $this->findMediaTarget($mediaAssets, [$target]))
             ->filter(fn ($asset) => is_array($asset) && trim((string) ($asset['source_url'] ?? '')) !== '')
