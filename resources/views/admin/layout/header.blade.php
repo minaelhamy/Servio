@@ -14,7 +14,7 @@
                     title="{{ trans('labels.view_website') }}" target="_blank"><i class="fa-solid fa-link fs-6"></i>
                 </a>
             @endif
-            @if (@helper::checkaddons('language'))
+            @if (false && @helper::checkaddons('language'))
                 @if (helper::available_language('')->count() > 1)
                     <div class="dropdown lag-btn">
                         <a class="btn btn-sm btn-primary rounded header-btn-icon dropdown-toggle" href="#"

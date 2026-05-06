@@ -50,7 +50,7 @@
             @php
                 $languages = explode('|', helper::appdata($vendordata->id)->languages);
             @endphp
-            @if (@helper::checkaddons('language'))
+            @if (false && @helper::checkaddons('language'))
                 @if (count($languages) > 1)
                     <div class="dropdown lag-btn d-flex gap-2 d-lg-none btn-group">
                         <a class="dropdown-toggle open-btn btn-group bg-transparent p-0 border-0 m-0" type="button"
@@ -200,7 +200,7 @@
             @endphp
             <div class="d-flex gap-1">
                 <!--------- new language button --------->
-                @if (@helper::checkaddons('language'))
+            @if (false && @helper::checkaddons('language'))
                     @if (count($languages) > 1)
                         <div class="btn-group lag-btn">
                             <a class="nav-link d-flex align-items-center" href="#" role="button"

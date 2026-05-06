@@ -23,7 +23,7 @@
                     <img src="" height="46" alt="" id="logoimage">
                 </a>
             </div>
-            @if (@helper::checkaddons('language'))
+            @if (false && @helper::checkaddons('language'))
                 <div class="d-flex align-items-center gap-3">
                     @if (helper::available_language('')->count() > 1)
                         <div class="language-button-icon d-xl-none d-block">
@@ -149,7 +149,7 @@
                     </ul>
                 </div>
                 <div class="d-none d-xl-flex col-auto align-items-center gap-3">
-                    @if (@helper::checkaddons('language'))
+                    @if (false && @helper::checkaddons('language'))
                         @if (helper::available_language('')->count() > 1)
                             <div class="lag-btn  dropdown rounded-2">
                                 <a class="p-0 border-0 rounded-1 language-drop" href="#" role="button"
