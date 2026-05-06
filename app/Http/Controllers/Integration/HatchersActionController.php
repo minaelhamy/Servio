@@ -2121,8 +2121,8 @@ class HatchersActionController extends Controller
         }
 
         foreach ($selectedAssets as $index => $asset) {
-            $filename = $this->storeRemoteImageOrSource(
-                trim((string) ($asset['source_url'] ?? '')),
+            $filename = $this->storeRenderableMediaAsset(
+                is_array($asset) ? $asset : [],
                 storage_path('app/public/admin-assets/images/service/'),
                 'service'
             );
@@ -2142,6 +2142,23 @@ class HatchersActionController extends Controller
             }
             $image->save();
         }
+    }
+
+    private function storeRenderableMediaAsset(array $asset, string $directory, string $prefix): ?string
+    {
+        $candidateUrls = collect([
+            trim((string) ($asset['source_url'] ?? '')),
+            trim((string) ($asset['preview_url'] ?? '')),
+        ])->filter()->unique()->values();
+
+        foreach ($candidateUrls as $url) {
+            $stored = $this->storeRemoteImage($url, $directory, $prefix);
+            if ($stored) {
+                return $stored;
+            }
+        }
+
+        return $candidateUrls->first(fn (string $url): bool => filter_var($url, FILTER_VALIDATE_URL) !== false);
     }
 
     private function syncExistingServiceAssetsFromMedia(int $vendorId, array $mediaAssets): void
